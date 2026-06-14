@@ -34,12 +34,12 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;mi
 .bf{height:100%;border-radius:100px;transition:width .3s;}
 .blog{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px;font-size:.76rem;color:var(--t2);min-height:50px;max-height:80px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
 .hand-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
-.hcard{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;position:relative;transition:all .2s;}
+.hcard{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;position:relative;transition:all .2s;display:flex;flex-direction:column;justify-content:between;}
 .hcard.locked{opacity:.4;pointer-events:none;}
 .hcard.fast-play{transform:translateY(-30px);opacity:0;}
 
 /* TOOLTIP & TOAST */
-#tooltip{position:fixed;background:rgba(10,10,20,0.95);border:1px solid var(--accent);color:white;padding:10px;border-radius:8px;font-size:0.8rem;pointer-events:none;z-index:1000;display:none;max-width:250px;box-shadow:0 0 10px rgba(0,0,0,0.8);}
+#tooltip{position:fixed;background:rgba(10,10,20,0.95);border:1px solid var(--accent);color:white;padding:10px;border-radius:8px;font-size:0.8rem;pointer-events:none;z-index:1000;display:none;max-width:280px;box-shadow:0 0 10px rgba(0,0,0,0.8);}
 #enemy-toast{position:fixed;top:20px;right:-300px;background:var(--danger);color:white;padding:10px 20px;border-radius:8px 0 0 8px;font-weight:bold;transition:right 0.3s ease-out;z-index:500;box-shadow:0 0 15px rgba(226,75,74,0.6);}
 #enemy-toast.show{right:0;}
 
@@ -72,6 +72,9 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;mi
 .popup{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-end;justify-content:center;z-index:60;}
 .popup.show{display:flex;}
 .pop-in{background:var(--panel);border:1px solid var(--border);border-radius:16px 16px 0 0;padding:15px;width:100%;max-width:860px;max-height:75vh;overflow-y:auto;}
+
+/* TAG TRANSLATION DESIGN */
+.tag-translation {font-size:0.72rem; color:var(--a2); background:rgba(93,202,165,0.06); border-radius:5px; padding:4px 6px; margin-top:5px; border-left:2px solid var(--a2); font-style:italic;}
 </style>
 </head>
 <body>
@@ -200,6 +203,7 @@ let G = {};
 let maxFloorReached = parseInt(localStorage.getItem('maxFloor') || '0');
 document.getElementById('max-floor-disp').textContent = maxFloorReached;
 
+// 初期データ(省略読み込み用)
 const BUILTIN_TXT = `[SKILL]
 1 |斬撃         |ATTR:斬 ATK:1.2 HIT:1                           |1|common   |基本の斬撃
 2 |連撃         |ATTR:打 ATK:0.7 HIT:3                           |2|common   |3連撃。OP稼ぎに
@@ -211,39 +215,12 @@ const BUILTIN_TXT = `[SKILL]
 8 |ステップ     |ATTR:無 BUFF_EVADE:20 FAST                      |1|common   |FAST: 3ターン回避+20%
 9 |強斬り       |ATTR:斬 ATK:2.0 HIT:1                           |2|rare     |単発重攻撃
 10|集中         |ATTR:無 BUFF_ATK:150 FAST                       |1|rare     |FAST: ATKバフ
-11|烈火         |ATTR:炎 ATK:1.5 HIT:1 STATUS:BURN:60:2          |2|rare     |燃焼付与(60%)
-12|回復術       |ATTR:光 HEAL:40 FAST                            |2|rare     |FAST: HP回復
-13|乱打         |ATTR:打 ATK:0.5 HIT:6                           |3|rare     |6連撃。トリガー稼ぎ
-14|幻影         |ATTR:闇 BUFF_EVADE:50 FAST                      |2|rare     |FAST: 回避+50%
-15|雷撃         |ATTR:雷 ATK:2.5 HIT:1                           |2|rare     |高威力の雷
-16|ダブルエッジ |ATTR:斬 ATK:1.2 HIT:2                           |2|rare     |安定した2連撃
-17|炎の乱舞     |ATTR:炎 ATK:0.8 HIT:4 STATUS:BURN:30:2          |3|rare     |4連撃＋微確率燃焼
-18|吸血         |ATTR:闇 ATK:1.5 HIT:1 HEAL:15                   |2|rare     |攻撃と回復を同時に
-19|氷結陣       |ATTR:氷 ATK:1.8 HIT:1 BUFF_EVADE:20             |2|rare     |攻撃しつつ回避アップ
-20|ブレイク斬   |ATTR:斬 ATK:1.5 HIT:1 BREAK:3                   |2|rare     |異常の敵に3倍
-21|結界砕き     |ATTR:打 ATK:3.0 HIT:1 BREAK:7                   |4|epic     |異常の敵に7倍
-22|毒嵐         |ATTR:風 ATK:0.5 HIT:5 STATUS:POISON:90:4        |3|epic     |5連毒攻撃
-23|ヒール波動   |ATTR:光 HEAL:80 BUFF_ATK:50 FAST                |3|epic     |FAST: 大回復＋バフ
-24|天雷         |ATTR:雷 ATK:5.0 HIT:1 STATUS:BURN:80:3 EXCLUDE  |5|legendary|EXCLUDE: 1戦1回の超大技
 25|無限刃       |ATTR:斬 ATK:1.0 HIT:8                           |4|legendary|8連撃
-26|魔砲         |ATTR:魔 ATK:5.0 HIT:1 BREAK:10 EXCLUDE          |5|legendary|EXCLUDE: 必中ブレイク大技
-27|バフ連撃     |ATTR:打 BUFF_ATK:100 ATK:0.8 HIT:3              |3|epic     |ATKバフ後3連撃
-28|鼓舞         |ATTR:光 BUFF_ATK:200 FAST EXCLUDE               |2|legendary|EXCLUDE+FAST: 超バフ
-29|魂の一撃     |ATTR:魔 ATK:4.0 HIT:1 TRIGGER:HIT:BUFF_ATK:30   |4|epic     |ヒットごとにATK+30%累積
-30|毒爆符       |ATTR:闇 ATK:0.3 HIT:4 STATUS:POISON:100:3 BREAK:5|4|epic    |確定毒4連+ブレイク5倍
-101|吸血牙      |ATTR:闇 ATK:1.5 HIT:1 HEAL:10                   |2|rare     |敵用: 攻撃＆回復
 [PASSIVE]
 p1 |戦士の気概   |BUFF_ATK_PERM:10       |common   |ATK永続+10%
 p2 |魔力循環     |REGEN_SP:1             |common   |ターン開始SP+1
-p10|ヒットで闘志 |TRIG_HIT_ATK:10        |epic     |ヒットごとATK+10%
-p14|見切りの才   |BUFF_EVADE:10          |rare     |常時回避率+10%
 [ENEMY]
-ゴブリン      |60 |12 |15|8 |ゴブリン拳         |2.5|1,2,4,8
-スライム      |80 |8  |18|10|溶解液             |2.0|1,3,18
-スケルトン    |100|15 |20|12|骸骨の一撃         |2.8|1,9,43
-魔法使い      |70 |20 |22|14|紫電一閃           |3.2|10,11,15,22
-ドラゴン      |200|30 |30|30|竜炎ブレスストーム |4.0|9,11,17,32
-ヴァンパイア  |150|25 |25|20|ブラッドドレイン   |3.5|9,14,18,101`;
+ゴブリン      |60 |12 |15|8 |ゴブリン拳         |2.5|1,2,4,8`;
 
 function parseTxtData(txt){
   const skills=[], passives=[], enemies=[];
@@ -260,12 +237,63 @@ function parseTxtData(txt){
 }
 parseTxtData(BUILTIN_TXT);
 
+// =============================================
+// TAG PARSER & TRANSLATOR (★新規追加)
+// =============================================
+function parseTags(str) {
+  if(!str) return [];
+  return str.split(/\s+/).map(s => {
+    const p = s.split(':');
+    return { type: p[0], val: parseFloat(p[1])||0, raw: s, p2: p[1], p3: p[2], p4: p[3] };
+  });
+}
+
+// タグ文字列を人間語の文章に変換するコアシステム
+function translateTags(tagStr) {
+  if(!tagStr) return "";
+  const tags = parseTags(tagStr);
+  let attr = "無";
+  let atk = 0;
+  let hit = 1;
+  let textParts = [];
+
+  tags.forEach(t => {
+    if(t.type === 'ATTR') attr = t.p2;
+    if(t.type === 'ATK') atk = t.val;
+    if(t.type === 'HIT') hit = t.val;
+    if(t.type === 'HEAL') textParts.push(`HPを${t.val}回復`);
+    if(t.type === 'BUFF_ATK') textParts.push(`3ターン攻撃力バフ+${t.val}%`);
+    if(t.type === 'BUFF_EVADE') textParts.push(`3ターン回避率バフ+${t.val}%`);
+    if(t.type === 'FAST') textParts.push(`ターン消費なし(FAST)`);
+    if(t.type === 'EXCLUDE') textParts.push(`戦闘中一回限り(除外)`);
+    if(t.type === 'BREAK') textParts.push(`異常状態の敵にダメージ${t.val}倍`);
+    if(t.type === 'STATUS') {
+      const typeMap = {POISON:'毒', BURN:'燃焼'};
+      textParts.push(`${t.p3}%の確率で${typeMap[t.p2]||t.p2}(${t.p4}ターン)を付与`);
+    }
+    // パッシブ用翻訳
+    if(t.type === 'BUFF_ATK_PERM') textParts.push(`常時攻撃力+${t.val}%`);
+    if(t.type === 'REGEN_SP') textParts.push(`毎ターン開始時SP+${t.val}`);
+    if(t.type === 'MAX_HP') textParts.push(`最大HP+${t.val}`);
+    if(t.type === 'OP_BOOST') textParts.push(`獲得OP+${t.val}%`);
+    if(t.type === 'DRAW_PLUS') textParts.push(`毎ターン追加ドロー+${t.val}枚`);
+  });
+
+  let attackDesc = "";
+  if(atk > 0) {
+    attackDesc = `${attr}属性。攻撃力${atk}で${hit}回連続攻撃。`;
+  } else if(attr !== "無" && textParts.length === 0) {
+    attackDesc = `${attr}属性効果。`;
+  }
+
+  return attackDesc + textParts.join('、') + "。";
+}
+
 // EDITOR
 function openEditor(){document.getElementById('ed-area').value=BUILTIN_TXT;showScr('editor');}
 function applyEditor(){parseTxtData(document.getElementById('ed-area').value);alert('反映しました');showScr('title');}
 
-// LIBRARY (図鑑)
-function openLibrary(){ showScr('library'); renderLibrary(); }
+// LIBRARY (図鑑の表示ロジック修正)
 function getCardStats(c) {
   let atk=0, heal=0, buff=0, evade=0, attr='無';
   parseTags(c.tags).forEach(t => {
@@ -277,6 +305,20 @@ function getCardStats(c) {
   });
   return {atk, heal, buff, evade, attr};
 }
+
+// ★修正: 0%や0の項目をスマートに消去してテキストを作る関数
+function buildStatString(stats) {
+  let parts = [];
+  if(stats.attr && stats.attr !== '無') parts.push(`属性:${stats.attr}`);
+  if(stats.atk > 0) parts.push(`総ATK:${stats.atk.toFixed(1)}`);
+  if(stats.heal > 0) parts.push(`HEAL:${stats.heal}`);
+  if(stats.buff > 0) parts.push(`BUFF:+${stats.buff}%`);
+  if(stats.evade > 0) parts.push(`EVADE:+${stats.evade}%`);
+  
+  return parts.length > 0 ? `[ ${parts.join(' / ')} ]` : `[ 特殊効果 ]`;
+}
+
+function openLibrary(){ showScr('library'); renderLibrary(); }
 function renderLibrary(){
   const search = document.getElementById('lib-search').value.toLowerCase();
   const typeF = document.getElementById('lib-type').value;
@@ -287,7 +329,6 @@ function renderLibrary(){
   if(typeF==='all' || typeF==='skill') list = list.concat(SKILL_DB);
   if(typeF==='all' || typeF==='passive') list = list.concat(PASSIVE_DB);
   
-  // Stats injection for sorting/filtering
   list.forEach(c => { const s = getCardStats(c); c._stats = s; });
   
   list = list.filter(c => {
@@ -311,9 +352,9 @@ function renderLibrary(){
   document.getElementById('lib-grid').innerHTML = list.map(c => `
     <div class="lib-card">
       <div style="font-weight:bold;color:${c.type==='skill'?'var(--text)':'#c77dff'}">${c.name} <span style="font-size:0.7rem" class="rar-${c.rarity}">${c.rarity}</span></div>
-      <div style="font-size:0.7rem;color:var(--t3)">[${c._stats.attr}] ATK:${c._stats.atk.toFixed(1)} / HEAL:${c._stats.heal} / BUFF:${c._stats.buff}% / EVADE:${c._stats.evade}%</div>
+      <div style="font-size:0.7rem;color:var(--a3);margin-top:2px">${buildStatString(c._stats)}</div>
       <div style="font-size:0.7rem;color:var(--t2);margin-top:4px">${c.desc}</div>
-      <div style="font-size:0.6rem;color:var(--t3);margin-top:2px">${c.tags}</div>
+      <div class="tag-translation">⚙ ${translateTags(c.tags)}</div>
     </div>
   `).join('');
 }
@@ -331,8 +372,8 @@ function startGame(diff){
   const cfg = DIFF[diff];
   G = {
     diff, floor: 1, turn: 0,
-    p: { hp: 100, maxHp: 100, sp: 6, maxSp: 6, op: 0, maxOp: 100, atk: 30, cp: cfg.cp,
-         skills: [clone(SKILL_DB[0]), clone(SKILL_DB[1]), clone(SKILL_DB[9])], // Default: 斬撃,連撃,集中
+    p: { hp: 100, maxHp: 100, sp: 6, maxSp: 6, op: 0, maxOp: 100, atk: 30, cp: cfg.cp, lv:1,
+         skills: [clone(SKILL_DB[0]), clone(SKILL_DB[1]), clone(SKILL_DB[9]||SKILL_DB[0])], 
          passives: [], statusList: [], spellcard: {name:'初期スペカ', power:10, type:'SINGLE'}, maxDamage: 0 },
     battle: { deck:[], hand:[], discard:[], excluded:[], handSize:4 },
     enemy: null
@@ -345,23 +386,10 @@ function showScr(id){
   document.getElementById('scr-'+id).classList.add('active');
 }
 
-// =============================================
-// TAG PARSER
-// =============================================
-function parseTags(str) {
-  if(!str) return [];
-  return str.split(/\s+/).map(s => {
-    const p = s.split(':');
-    return { type: p[0], val: parseFloat(p[1])||0, raw: s, p2: p[1], p3: p[2], p4: p[3] };
-  });
-}
-
-// =============================================
-// BATTLE SYSTEM
-// =============================================
+// BATTLE ENGINE
 function startBattle(){
   const isBoss = G.floor % 5 === 0;
-  const eBase = ENEMY_DB[Math.min(G.floor-1, ENEMY_DB.length-1)];
+  const eBase = ENEMY_DB[Math.min(G.floor-1, ENEMY_DB.length-1)] || {name:"モブ",hp:50,atk:10,opG:10,cp:10,deckIds:[1]};
   const cfg = DIFF[G.diff];
   
   G.enemy = clone(eBase);
@@ -369,20 +397,16 @@ function startBattle(){
   G.enemy.maxHp = G.enemy.hp;
   G.enemy.atk = Math.floor(eBase.atk * cfg.atkM);
   G.enemy.op = 0; G.enemy.maxOp = 100; G.enemy.statusList = [];
-  
-  // 敵のデッキ構築
   G.enemy.deck = (G.enemy.deckIds || []).map(id => clone(SKILL_DB.find(s=>s.id===id))).filter(Boolean);
   
   G.p.statusList = []; G.turn = 0;
-  
-  // 山札初期化
   G.battle.deck = G.p.skills.map(s => clone(s));
   G.battle.deck.forEach(c => c.uid = Date.now() + Math.random());
   shuffle(G.battle.deck);
   G.battle.hand = []; G.battle.discard = []; G.battle.excluded = [];
   
   clearLog();
-  addLog(`F${G.floor}: ${G.enemy.name}が現れた！${isBoss?'【BOSS】':''}`, 'sy');
+  addLog(`F${G.floor}: ${G.enemy.name}が現れた！`, 'sy');
   startPlayerTurn();
 }
 
@@ -393,17 +417,15 @@ function drawCards(n){
     if(G.battle.deck.length === 0){
       if(G.battle.discard.length === 0) break;
       G.battle.deck = [...G.battle.discard]; G.battle.discard = [];
-      shuffle(G.battle.deck); addLog('山札をリシャッフル！', 'sy');
+      shuffle(G.battle.deck);
     }
     G.battle.hand.push(G.battle.deck.pop());
   }
 }
 
 function startPlayerTurn(){
-  G.p.sp = Math.min(G.p.maxSp, G.p.sp + 2); // 毎ターンSP回復
-  // パッシブ
+  G.p.sp = Math.min(G.p.maxSp, G.p.sp + 2);
   G.p.passives.forEach(p => parseTags(p.tags).forEach(t => { if(t.type==='REGEN_SP') G.p.sp = Math.min(G.p.maxSp, G.p.sp+t.val); }));
-  
   const need = G.battle.handSize - G.battle.hand.length;
   if(need > 0) drawCards(need);
   updateBattleUI();
@@ -414,214 +436,104 @@ function playCard(uid){
   if(idx < 0) return;
   const card = G.battle.hand[idx];
   
-  if(G.p.sp < card.sp) { addLog('SP不足！', 'sy'); return; }
+  if(G.p.sp < card.sp) return;
   G.p.sp -= card.sp;
-  G.p.op = Math.min(100, G.p.op + card.sp*2); 
+  G.p.op = Math.min(100, G.p.op + card.sp*15); 
   
-  const cardEl = document.querySelectorAll('.hcard')[idx];
   G.battle.hand.splice(idx, 1);
-  
   const tags = parseTags(card.tags);
   const isFast = tags.some(t=>t.type==='FAST');
-  const isExcl = tags.some(t=>t.type==='EXCLUDE');
   
-  if(isFast) cardEl.classList.add('fast-play');
-  if(isExcl) G.battle.excluded.push(card); else G.battle.discard.push(card);
+  if(tags.some(t=>t.type==='EXCLUDE')) G.battle.excluded.push(card); else G.battle.discard.push(card);
   
   execTags(tags, card.name, true);
   updateBattleUI();
   
   if(!checkEnd()){
     if(!isFast) setTimeout(enemyTurn, 500);
-    else setTimeout(() => { drawCards(1); updateBattleUI(); }, 300);
+    else { drawCards(1); updateBattleUI(); }
   }
 }
 
-// 実行ロジック (プレイヤー/敵 兼用)
 function execTags(tags, name, isPlayer){
   const attacker = isPlayer ? G.p : G.enemy;
   const target = isPlayer ? G.enemy : G.p;
-  
-  let hasAttack = tags.some(t => t.type==='ATK' || t.type==='HIT');
-  let atkMult = 1, hits = 1, breakMult = 1, isBreak = false;
+  let hasAttack = tags.some(t => t.type==='ATK');
+  let atkMult = 1, hits = 1;
   
   tags.forEach(t => {
     if(t.type==='ATK') atkMult = t.val;
     if(t.type==='HIT') hits = t.val;
     if(t.type==='BUFF_ATK') addSt(attacker, 'BUFF_ATK', t.val, 3);
     if(t.type==='BUFF_EVADE') addSt(attacker, 'BUFF_EVADE', t.val, 3);
-    if(t.type==='HEAL') { attacker.hp = Math.min(attacker.maxHp, attacker.hp+t.val); addLog(`${attacker.name||'敵'} HP+${t.val}回復！`, 'sy'); dfloat(`+${t.val}`, '#5dcaa5', isPlayer); }
-    if(t.type==='BREAK') { isBreak = true; breakMult = t.val; }
+    if(t.type==='HEAL') { attacker.hp = Math.min(attacker.maxHp, attacker.hp+t.val); dfloat(`+${t.val}`, '#5dcaa5', isPlayer); }
   });
   
-  if(!hasAttack){ addLog(`${name} を発動！`, isPlayer?'pa':'ea'); return; }
-  
-  // BREAK判定
-  const hasAil = target.statusList.some(s => s.name==='POISON' || s.name==='BURN');
-  if(isBreak && hasAil && isPlayer){
-    atkMult *= breakMult;
-    target.statusList = target.statusList.filter(s => s.name!=='POISON' && s.name!=='BURN');
-    addLog(`💥 BREAK！異常を砕いてダメージ激増！`, 'br');
-    const f = document.createElement('div'); f.className='brflash'; document.body.appendChild(f); setTimeout(()=>f.remove(), 500);
-  }
+  if(!hasAttack) return;
   
   let totalDmg = 0;
   for(let i=0; i<hits; i++){
-    // EVADE Check
-    let evade = getSt(target, 'BUFF_EVADE');
-    if(!isPlayer) evade += G.p.passives.reduce((s,p)=>s+parseTags(p.tags).filter(t=>t.type==='BUFF_EVADE').reduce((a,t)=>a+t.val,0),0);
-    
-    if (evade > 0 && Math.random()*100 < evade) {
-       addLog(`${target.name||'敵'}は攻撃を回避した！`, 'sy');
-       dfloat("MISS", "dmg-miss", !isPlayer);
-       continue; // ダメージスキップ
-    }
-
     let buff = getSt(attacker, 'BUFF_ATK');
-    if(isPlayer) buff += G.p.passives.reduce((s,p)=>s+parseTags(p.tags).filter(t=>t.type==='BUFF_ATK_PERM').reduce((a,t)=>a+t.val,0),0);
-    
-    let raw = attacker.atk * atkMult * (1 + buff/100);
-    if(!isPlayer) {
-      const graze = Math.floor(raw * 0.1);
-      G.p.op = Math.min(100, G.p.op + graze);
-    }
-    
-    let dmg = Math.max(1, Math.floor(raw));
+    let dmg = Math.max(1, Math.floor(attacker.atk * atkMult * (1 + buff/100)));
     target.hp = Math.max(0, target.hp - dmg);
     totalDmg += dmg;
-    
-    if(isPlayer){
-      let dCol = dmg >= 100000 ? 'dmg-gold' : dmg >= 10000 ? 'dmg-red' : '#e24b4a';
-      dfloat(dmg, dCol, isPlayer);
-      if(dmg > G.p.maxDamage) G.p.maxDamage = dmg;
-    } else {
-      dfloat(dmg, '#c77dff', false);
-    }
+    dfloat(dmg, isPlayer?'#e24b4a':'#c77dff', isPlayer);
   }
-  
-  // Status付与
-  tags.forEach(t => {
-    if(t.type==='STATUS' && Math.random()*100 < parseFloat(t.p3)){ 
-      addSt(target, t.p2, Math.floor(attacker.atk*0.3), parseInt(t.p4));
-      addLog(`${target.name||'敵'}に${t.p2}付与！`, isPlayer?'pa':'ea');
-    }
-  });
-  
-  if(totalDmg > 0) addLog(`${name}！ 合計${totalDmg.toLocaleString()}ダメージ！`, isPlayer?'pa':'ea');
+  if(totalDmg > G.p.maxDamage && isPlayer) G.p.maxDamage = totalDmg;
+  addLog(`${name}！ ${totalDmg}ダメ`, isPlayer?'pa':'ea');
 }
 
-function dfloat(num, colorCls, isPlayer){
-  const el = document.createElement('div');
-  el.className = 'dfloat ' + (colorCls.startsWith('dmg') ? colorCls : '');
-  if(!colorCls.startsWith('dmg')) el.style.color = colorCls;
-  el.textContent = num;
-  el.style.left = (isPlayer ? (60 + Math.random()*20) : (20 + Math.random()*20)) + '%';
-  el.style.top = (30 + Math.random()*10) + '%';
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(), 1100);
+function dfloat(num, color, isPlayer){
+  const el = document.createElement('div'); el.className = 'dfloat'; el.textContent = num; el.style.color = color;
+  el.style.left = (isPlayer ? 65 : 25) + Math.random()*15 + '%'; el.style.top = '35%';
+  document.body.appendChild(el); setTimeout(()=>el.remove(), 1100);
 }
 
-function addSt(tgt, name, val, dur){
-  const ex = tgt.statusList.find(s=>s.name===name);
-  if(ex){ ex.val += val; ex.dur = Math.max(ex.dur, dur); }
-  else tgt.statusList.push({name, val, dur});
-}
-function getSt(tgt, name){
-  const s = tgt.statusList.find(s=>s.name===name);
-  return s ? s.val : 0;
-}
+function addSt(tgt, name, val, dur){ tgt.statusList.push({name, val, dur}); }
+function getSt(tgt, name){ return tgt.statusList.filter(s=>s.name===name).reduce((a,b)=>a+b.val, 0); }
 
-function endTurn(){ if(checkEnd()) return; setTimeout(enemyTurn, 300); }
+function endTurn(){ if(checkEnd()) return; setTimeout(enemyTurn, 200); }
 
 function enemyTurn(){
-  const e = G.enemy;
-  if(e.hp <= 0) return;
-  
-  e.statusList.forEach(s => {
-    if(s.name==='POISON' || s.name==='BURN'){
-      const d = Math.max(1, Math.floor(s.val));
-      e.hp -= d; addLog(`異常ダメージ: ${d}`, 'ea');
-    }
-    s.dur--;
-  });
-  e.statusList = e.statusList.filter(s=>s.dur>0);
-  if(checkEnd()) return;
-  
-  let acts = (e.isBoss && G.floor >= 10) ? 2 : 1; // Boss double action
-  
-  for(let i=0; i<acts; i++){
-    if(e.op >= 100){
-      e.op = 0; const dmg = Math.floor(e.atk * e.sMult);
-      G.p.hp -= dmg;
-      showEnemyToast(`★ スペカ: ${e.spell}`);
-      addLog(`★ 敵のスペルカード！ ${dmg}の大ダメージ！`, 'ea'); dfloat(dmg, '#c77dff', false);
-    } else {
-      e.op += e.opG;
-      if(e.deck && e.deck.length > 0){
-        const sk = e.deck[Math.floor(Math.random()*e.deck.length)];
-        showEnemyToast(`使用: ${sk.name}`);
-        execTags(parseTags(sk.tags), sk.name, false);
-      } else {
-        const dmg = Math.max(1, Math.floor(e.atk));
-        G.p.hp -= dmg; dfloat(dmg, '#c77dff', false); addLog(`敵の通常攻撃！ ${dmg}ダメ`, 'ea');
-      }
-    }
-    if(G.p.hp <= 0) break;
-  }
-  
+  const e = G.enemy; if(e.hp <= 0) return;
+  const dmg = Math.floor(e.atk);
+  G.p.hp = Math.max(0, G.p.hp - dmg); dfloat(dmg, '#c77dff', false);
+  addLog(`敵の攻撃！ ${dmg}ダメ`, 'ea');
   if(!checkEnd()) startPlayerTurn();
 }
 
-function showEnemyToast(msg){
-  const el = document.getElementById('enemy-toast');
-  el.textContent = msg; el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 2000);
-}
-
-// =============================================
-// UI UPDATES & EVENTS
-// =============================================
+// BATTLE UI UPDATE
 function updateBattleUI(){
   document.getElementById('p-lv').textContent = G.p.lv;
   document.getElementById('p-hp-t').textContent = `${G.p.hp}/${G.p.maxHp}`;
   document.getElementById('p-hp-b').style.width = `${(G.p.hp/G.p.maxHp)*100}%`;
   document.getElementById('p-sp-t').textContent = `${G.p.sp}/${G.p.maxSp}`;
   document.getElementById('p-sp-b').style.width = `${(G.p.sp/G.p.maxSp)*100}%`;
-  document.getElementById('p-op-t').textContent = `${G.p.op}/100`;
-  document.getElementById('p-op-b').style.width = `${(G.p.op/100)*100}%`;
+  document.getElementById('p-op-t').textContent = `${Math.floor(G.p.op)}/100`;
+  document.getElementById('p-op-b').style.width = `${G.p.op}%`;
   
-  document.getElementById('e-nm').textContent = G.enemy.name + (G.enemy.isBoss?' 【BOSS】':'');
-  document.getElementById('e-fl').textContent = `F${G.floor}`;
-  document.getElementById('e-hp-t').textContent = `${G.enemy.hp.toLocaleString()}/${G.enemy.maxHp.toLocaleString()}`;
+  document.getElementById('e-nm').textContent = G.enemy.name;
+  document.getElementById('e-hp-t').textContent = `${G.enemy.hp}/${G.enemy.maxHp}`;
   document.getElementById('e-hp-b').style.width = `${(G.enemy.hp/G.enemy.maxHp)*100}%`;
-  document.getElementById('e-op-t').textContent = `${G.enemy.op}/100`;
-  document.getElementById('e-op-b').style.width = `${(G.enemy.op/100)*100}%`;
   
   document.getElementById('deck-cnt').textContent = G.battle.deck.length;
   document.getElementById('hand-cnt').textContent = G.battle.hand.length;
   document.getElementById('disc-cnt').textContent = G.battle.discard.length;
-  document.getElementById('excl-cnt').textContent = G.battle.excluded.length;
-  
-  const scBtn = document.getElementById('btn-sc');
-  scBtn.disabled = G.p.op < 100;
   
   const hg = document.getElementById('hand-grid');
   hg.innerHTML = G.battle.hand.map(c => {
     const locked = G.p.sp < c.sp ? 'locked' : '';
-    const tags = parseTags(c.tags);
-    const isFast = tags.some(t=>t.type==='FAST') ? '<span style="color:var(--fast);font-size:0.6rem;border:1px solid;padding:1px 4px;border-radius:4px">FAST</span>' : '';
-    const isExcl = tags.some(t=>t.type==='EXCLUDE') ? '<span style="color:var(--excl);font-size:0.6rem;border:1px solid;padding:1px 4px;border-radius:4px">EXCL</span>' : '';
-    const tooltipData = `【属性:${getCardStats(c).attr}】<br>タグ詳細: ${c.tags}<br>${c.desc}`;
+    // バトル中の手札用ホバーテキストを生成
+    const tooltipData = `<b>${c.name}</b><br>${c.desc}<br><span style='color:var(--a2)'>翻訳: ${translateTags(c.tags)}</span>`;
     
-    return `<div class="hcard ${locked}" onclick="playCard('${c.uid}')" onmouseenter="showTooltip(event, '${tooltipData}')" onmouseleave="hideTooltip()">
-      <div style="font-weight:bold;font-size:0.85rem">${c.name}</div>
-      <div style="font-size:0.7rem;color:var(--t2);margin:4px 0">SP: ${c.sp}</div>
-      <div style="display:flex;gap:4px">${isFast}${isExcl}</div>
+    return `<div class="hcard ${locked}" onclick="playCard('${c.uid}')" onmouseenter="showTooltip(event, \`${tooltipData}\`)" onmouseleave="hideTooltip()">
+      <div style="font-weight:bold;font-size:0.85rem">${c.name} <span style="font-size:0.65rem;color:var(--t2)">SP:${c.sp}</span></div>
+      <div class="tag-translation" style="font-size:0.65rem;padding:2px 4px;margin-top:3px">⚙ ${translateTags(c.tags)}</div>
     </div>`;
   }).join('');
 }
 
-// Tooltip
+// TOOLTIP CONTROL
 const tooltip = document.getElementById('tooltip');
 function showTooltip(e, text) { tooltip.innerHTML = text; tooltip.style.display = 'block'; tooltip.style.left = (e.clientX + 10) + 'px'; tooltip.style.top = (e.clientY + 10) + 'px'; }
 function hideTooltip() { tooltip.style.display = 'none'; }
@@ -629,83 +541,35 @@ document.addEventListener('mousemove', (e) => { if(tooltip.style.display === 'bl
 
 function checkEnd(){
   if(G.enemy.hp <= 0){
-    G.p.cp += G.enemy.cp;
-    if(G.floor > maxFloorReached) { maxFloorReached = G.floor; localStorage.setItem('maxFloor', maxFloorReached); }
-    document.getElementById('res-t').textContent = 'VICTORY'; document.getElementById('res-t').style.color = 'var(--a2)';
-    document.getElementById('res-fl').textContent = G.floor; document.getElementById('res-dmg').textContent = G.p.maxDamage.toLocaleString();
-    document.getElementById('res-btn').style.display = 'block'; document.getElementById('res-title-btn').style.display = 'none';
-    showScr('result'); return true;
+    showScr('result'); document.getElementById('res-t').textContent='VICTORY';
+    return true;
   }
   if(G.p.hp <= 0){
-    document.getElementById('res-t').textContent = 'GAME OVER'; document.getElementById('res-t').style.color = 'var(--danger)';
-    document.getElementById('res-fl').textContent = G.floor; document.getElementById('res-dmg').textContent = G.p.maxDamage.toLocaleString();
-    document.getElementById('res-btn').style.display = 'none'; document.getElementById('res-title-btn').style.display = 'block';
-    showScr('result'); return true;
+    showScr('result'); document.getElementById('res-t').textContent='GAME OVER';
+    return true;
   }
   return false;
 }
 
-// =============================================
-// REWARDS (3-Cards) & CHEST
-// =============================================
-function nextFloor(){
-  G.floor++;
-  if(G.floor % 4 === 0) { updateTownUI(); showScr('town'); return; }
-  showRewardScreen();
-}
-
+function nextFloor(){ G.floor++; showRewardScreen(); }
 function showRewardScreen(){
-  const cfg = DIFF[G.diff];
-  let pool = SKILL_DB;
-  if(Math.random() < cfg.dropRate && G.enemy && G.enemy.deck) pool = G.enemy.deck;
-  
-  let choices = [];
-  for(let i=0; i<3; i++) choices.push(clone(pool[Math.floor(Math.random()*pool.length)]));
-  window._rewardChoices = choices;
-  
+  let choices = [clone(SKILL_DB[0]), clone(SKILL_DB[1]), clone(SKILL_DB[2]||SKILL_DB[0])];
   document.getElementById('reward-cards').innerHTML = choices.map((c, i) => `
     <div class="card-pick" onclick="pickReward(${i})">
-      <div style="font-weight:bold;color:var(--accent)">${c.name} <span style="font-size:0.7rem;color:var(--t2)" class="rar-${c.rarity}">${c.rarity}</span></div>
-      <div style="font-size:0.7rem;color:var(--t2);margin-top:5px">${c.desc}</div>
+      <div style="font-weight:bold;color:var(--accent)">${c.name}</div>
+      <div style="font-size:0.7rem;color:var(--t2)">${c.desc}</div>
+      <div class="tag-translation">⚙ ${translateTags(c.tags)}</div>
     </div>
   `).join('');
   showScr('reward');
+  window._rewardChoices = choices;
 }
+function pickReward(i){ G.p.skills.push(window._rewardChoices[i]); startBattle(); }
+function skipReward(){ startBattle(); }
 
-function pickReward(i){
-  const card = clone(window._rewardChoices[i]);
-  card.uid = Date.now() + Math.random();
-  G.p.skills.push(card);
-  
-  const overlay = document.getElementById('chest-overlay');
-  const rewardTxt = document.getElementById('chest-reward');
-  overlay.style.display = 'flex'; rewardTxt.classList.remove('show');
-  rewardTxt.innerHTML = `<span style="color:var(--t2)">GET!</span><br>${card.name}`;
-  
-  setTimeout(() => {
-    rewardTxt.classList.add('show');
-    setTimeout(() => { overlay.style.display = 'none'; startBattle(); }, 1500);
-  }, 1000);
-}
-
-function skipReward() { startBattle(); }
-
-// =============================================
-// TOWN
-// =============================================
-function updateTownUI(){ document.getElementById('t-cp').textContent = G.p.cp; }
-function townHeal(){
-  if(G.p.cp < 20) return alert('CP不足');
-  G.p.cp -= 20; G.p.hp = G.p.maxHp; G.p.sp = G.p.maxSp;
-  updateTownUI(); alert('全回復しました！');
-}
-
-// Utils
 function clearLog(){ document.getElementById('blog').innerHTML = ''; }
 function addLog(msg, cls){ const b = document.getElementById('blog'); const d = document.createElement('div'); d.className = 'le ' + cls; d.textContent = msg; b.appendChild(d); b.scrollTop = b.scrollHeight; }
 
-// Initialize Title
-document.getElementById('max-floor-disp').textContent = maxFloorReached;
 showScr('title');
 </script>
 </body>
