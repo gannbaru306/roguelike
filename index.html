@@ -368,18 +368,21 @@ const DIFF={
 
 function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
+// =============================================
+// GAME START (修正版)
+// =============================================
 function startGame(diff){
-  const cfg = DIFF[diff];
-  G = {
-    diff, floor: 1, turn: 0,
-    p: { hp: 100, maxHp: 100, sp: 6, maxSp: 6, op: 0, maxOp: 100, atk: 30, cp: cfg.cp, lv:1,
-         skills: [clone(SKILL_DB[0]), clone(SKILL_DB[1]), clone(SKILL_DB[9]||SKILL_DB[0])], 
-         passives: [], statusList: [], spellcard: {name:'初期スペカ', power:10, type:'SINGLE'}, maxDamage: 0 },
-    battle: { deck:[], hand:[], discard:[], excluded:[], handSize:4 },
-    enemy: null
-  };
-  startBattle();
+  initG(diff);
+  const isLunatic = diff === 'lunatic';
+  
+  // ★ここを元のポップアップを呼び出す形に戻す（直すのはこの3行だけ！）
+  showScPick(isLunatic, () => {
+    showFirstSkPick(() => {
+      startBattle();
+    });
+  });
 }
+
 
 function showScr(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
