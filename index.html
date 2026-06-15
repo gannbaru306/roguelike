@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>弾幕カードローグライクRPG - 完全版修正版</title>
+<title>弾幕カードローグライクRPG - 除外完全修正版</title>
 <style>
 :root{
   --bg:#08080f;--bg2:#10101c;--bg3:#181828;--panel:#141428;
@@ -207,7 +207,6 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 </div>
 
 <script>
-// ─── 100個超え！データ内蔵 ───
 const BUILTIN_TXT = `[SKILL]
 1 |斬撃         |ATTR:斬 ATK:1.2 HIT:1                           |1|common   |基本の刃による近接斬撃。
 2 |連撃         |ATTR:打 ATK:0.7 HIT:3                           |2|common   |打撃による3連続攻撃。OPゲージを溜める。
@@ -294,13 +293,13 @@ p10|見切りの才   |BUFF_EVADE:10          |rare     |常時回避率が10%�
 p11|神の加護     |BUFF_EVADE:25          |epic     |常時回避率が25%向上する。
 p12|狂戦士化     |BUFF_ATK_PERM:100      |legendary|攻撃威力を常時2倍(+100%)にする。
 p13|癒やしの風   |HEAL:5                 |common   |ターン終了時にHPが5回復する。
-p14|豊穣の力     |HEAL:15                |rare     |ターン終了時にHPが15回復する。
+p14|豊穣の力     |HEAL:15                |rare     |ターン終了時にHPが15回復する.
 p15|手品師       |DRAW_PLUS:2            |epic     |手札ドロー枚数が2枚増加。
 p16|神速の思考   |DRAW_PLUS:3            |legendary|手札ドロー枚数が3枚増加。
 p17|剣術の極意   |BUFF_ATK_PERM:15       |common   |常時ATKが15%向上する。
 p18|魔力炉心     |REGEN_SP:3             |legendary|毎ターンSPが3追加回復する。
 p19|生命の器     |MAX_HP:50              |rare     |最大HPが50増加する。
-p20|幻影の舞     |BUFF_EVADE:40          |legendary|常時回避率が40%向上する.
+p20|幻影の舞     |BUFF_EVADE:40          |legendary|常時回避率が40%向上する。
 p21|闘神のオーラ |BUFF_ATK_PERM:75       |legendary|常時ATKが75%向上する。
 p22|OPの源泉     |OP_BOOST:80            |legendary|獲得OPが80%増加する。
 p23|再生のルーン |HEAL:30                |epic     |ターン終了時にHPが30回復する。
@@ -509,7 +508,9 @@ function showFirstSkPick(cb){
 }
 function _toggleFsk(idx, id){
   const el = document.getElementById(`fsk-${idx}`);
-  G.p.skills.push(clone(SKILL_DB.find(s=>s.id===id)));
+  const ns = clone(SKILL_DB.find(s=>s.id===id));
+  ns.uid = 'c_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+  G.p.skills.push(ns);
   if(G.p.skills.length >= 3){
     document.getElementById('pop-fsk').classList.remove('show');
     if(window._fskCb) window._fskCb();
@@ -537,8 +538,13 @@ function startBattle(){
   G.p.maxHp = 100 + pMaxHpBonus;
   G.p.hp = G.p.maxHp;
   
+  // ★【除外バグの根本原因修正】
+  // 所持スキル(G.p.skills)自体にある各カードのuidを完全に固定し同期させます。
+  G.p.skills.forEach(s => {
+    if(!s.uid) s.uid = 'c_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+  });
+  
   G.battle.deck = G.p.skills.map(s => clone(s));
-  G.battle.deck.forEach(c => c.uid = 'c_' + Math.random().toString(36).substr(2, 9));
   shuffle(G.battle.deck);
   G.battle.hand = []; G.battle.discard = []; G.battle.excluded = [];
   
@@ -571,7 +577,6 @@ function startPlayerTurn(){
   updateBattleUI();
 }
 
-// ★FASTバグ・手札消失バグの修正箇所
 function playCard(uid){
   const idx = G.battle.hand.findIndex(c => c.uid === uid);
   if(idx < 0) return;
@@ -587,19 +592,25 @@ function playCard(uid){
   G.battle.hand.splice(idx, 1);
   const tags = parseTags(card.tags);
   const isFast = tags.some(t=>t.type==='FAST');
+  const isExcl = tags.some(t=>t.type==='EXCLUDE');
   
-  if(tags.some(t=>t.type==='EXCLUDE')) G.battle.excluded.push(card); 
-  else G.battle.discard.push(card);
+  if(isExcl) {
+    G.battle.excluded.push(card);
+    // 戦闘中一回きり（除外）なので、プレイヤーのマスターデッキ(G.p.skills)からも削除する
+    G.p.skills = G.p.skills.filter(s => s.uid !== card.uid);
+  } else {
+    G.battle.discard.push(card);
+  }
   
   execTags(tags, card.name, true);
   
   if(!checkEnd()){
     if(!isFast) {
-      updateBattleUI(); // 先に画面更新して操作ロック
+      updateBattleUI();
       document.getElementById('enemy-toast').classList.add('show');
       setTimeout(() => { document.getElementById('enemy-toast').classList.remove('show'); enemyTurn(); }, 550);
     } else {
-      updateBattleUI(); // FAST時は単に1枚減った状態で自分のターン継続
+      updateBattleUI();
     }
   }
 }
@@ -713,7 +724,6 @@ function enemyTurn(){
   if(!checkEnd()) startPlayerTurn();
 }
 
-// ★HTML崩れ・スペカボタン消失バグ修正箇所
 function updateBattleUI(){
   document.getElementById('p-lv').textContent = G.p.lv;
   document.getElementById('p-hp-t').textContent = `${G.p.hp}/${G.p.maxHp}`;
@@ -739,7 +749,6 @@ function updateBattleUI(){
   hg.innerHTML = G.battle.hand.map(c => {
     const locked = G.p.sp < c.sp ? 'locked' : '';
     const tooltipData = `<b>${c.name}</b><br>${c.desc}<br><span style='color:var(--a2)'>【内部タグ解析】<br>${translateTags(c.tags)}</span>`;
-    // ↓ 末尾のクォーテーション閉じ漏れを完全に修正！
     return `<div class="hcard ${locked}" onclick="playCard('${c.uid}')" onmouseenter="showTooltip(event, \`${tooltipData}\`)" onmouseleave="hideTooltip()">
       <div style="font-weight:bold;font-size:0.82rem; display:flex; justify-content:space-between;"><span>${c.name}</span> <span style="color:var(--accent)">SP:${c.sp}</span></div>
       <div class="tag-translation" style="font-size:0.65rem;padding:2px 4px;margin-top:2px;">⚙ ${translateTags(c.tags)}</div>
@@ -788,6 +797,7 @@ function showReward(){
 }
 function pickReward(i){
   const picked = clone(window._curRewardChoices[i]);
+  picked.uid = 'c_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
   if(picked.type === 'skill') G.p.skills.push(picked);
   else G.p.passives.push(picked);
   document.getElementById('pop-reward').classList.remove('show');
