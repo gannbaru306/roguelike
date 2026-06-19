@@ -30,6 +30,10 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 .nxt-icon{font-size:2.8rem;margin-bottom:6px;}.nxt-type{font-size:1.35rem;font-weight:800;}.nxt-desc{font-size:.83rem;color:var(--t2);margin-top:3px;}
 .nr{font-size:.7rem;padding:2px 9px;border-radius:100px;border:1px solid;display:inline-block;margin-top:7px;}
 .r-common{color:var(--t2);border-color:var(--t3);}.r-rare{color:#78c4ff;border-color:#78c4ff;}.r-epic{color:#c77dff;border-color:#c77dff;}.r-legendary{color:#ffd700;border-color:#ffd700;}
+/* ★新レアリティ用のCSSを付け足し */
+.r-mythic{color:#ff44aa;border-color:#ff44aa;text-shadow:0 0 5px rgba(255,68,170,.4);}
+.r-divine{color:#00ffff;border-color:#00ffff;text-shadow:0 0 8px rgba(0,255,255,.6);font-weight:bold;}
+
 #scr-battle{flex-direction:column;}.btop{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
 .cc{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:11px;position:relative;}
 .cc-nm{font-size:.9rem;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
@@ -76,6 +80,9 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 .btn-row{display:flex;gap:8px;}.btn-sc{border-color:var(--op);color:var(--op);flex:2;font-size:.8rem;}.btn-end{flex:1;color:var(--t2);}
 .btn-sc.ready{animation:scg 1s infinite alternate;border-width:2px;}
 @keyframes scg{from{box-shadow:none;}to{box-shadow:0 0 16px rgba(239,159,39,.6);}}
+/* ★アイテムボタン用のスタイルを付け足し */
+.btn-item{flex:1; border-color:#5dcaa5; color:#5dcaa5;}
+
 .popup{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-end;justify-content:center;z-index:60;}
 .popup.show{display:flex;}
 .pop-in{background:var(--panel);border:1px solid var(--border);border-radius:16px 16px 0 0;padding:14px;width:100%;max-width:860px;max-height:68vh;overflow-y:auto;}
@@ -212,8 +219,9 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 <div class="deck-info"><div class="di">手札 <b id="hcnt">0</b></div><div class="di">山札 <b id="dcnt">0</b></div><div class="di">捨て <b id="gcnt">0</b></div><div class="di" style="color:var(--excl)">除外 <b id="xcnt">0</b></div></div>
 <div class="hand-grid" id="hand-grid"></div>
 <div class="btn-row">
-<button class="btn btn-sc" id="btn-sc" onclick="castSpellcard()" disabled>◈ スペルカード (0/100)</button>
-<button class="btn btn-end" onclick="endTurn()">⏩ ターン終了</button>
+<button class="btn btn-sc" id="btn-sc" onclick="castSpellcard()" disabled>◈ スペカ (0/100)</button>
+<button class="btn btn-item" id="btn-item" onclick="openBattleItem()">🎒 アイテム</button>
+<button class="btn btn-end" onclick="endTurn()">⏩ 終了</button>
 </div>
 </div>
 <div class="screen" id="scr-result">
@@ -284,11 +292,20 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 </div>
 <div class="screen" id="scr-editor">
 <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><button class="btn" style="padding:5px 11px;font-size:.74rem" onclick="showScr('title')">← 戻る</button><span style="font-size:.95rem;font-weight:700;color:var(--a3)">📝 tag_card.txt エディタ</span></div>
-<div style="font-size:.72rem;color:var(--t2);background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px;line-height:1.7">SKILL: <code style="color:var(--a3)">id|name|tags|sp|rarity|desc</code> &nbsp; PASSIVE: <code style="color:var(--a3)">id|name|effects|rarity|desc</code><br>ENEMY: <code style="color:var(--a3)">name|hp|atk|opG|cp|spell|sMult|deck_type|actions</code> &nbsp; SPELLCARD: <code style="color:var(--a3)">id|name|type|power|buff|hits|perAil|rarity|desc</code></div>
+<div style="font-size:.72rem;color:var(--t2);background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px;line-height:1.7">SKILL: <code style="color:var(--a3)">id|name|tags|sp|rarity|desc</code> &nbsp; PASSIVE: <code style="color:var(--a3)">id|name|effects|rarity|desc</code><br>ENEMY: <code style="color:var(--a3)">name|hp|atk|opG|cp|spell|sMult|deck_type|actions</code> &nbsp; SPELLCARD: <code style="color:var(--a3)">id|name|type|power|buff|hits|perAil|rarity|desc</code><br>ITEM: <code style="color:var(--a3)">id|name|type|val|cost|rarity|desc</code></div>
 <textarea id="ed-area" spellcheck="false" style="width:100%;height:50vh;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:7px;padding:11px;font-family:monospace;font-size:.78rem;resize:vertical;line-height:1.6"></textarea>
 <div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn" style="flex:1;border-color:var(--a2);color:var(--a2)" onclick="applyEditor()">✔ 反映</button><button class="btn" style="flex:1;border-color:var(--a3);color:var(--a3)" onclick="copyEditor()">📋 コピー</button><button class="btn" style="flex:1" onclick="reloadEditor()">↺ 再読込</button></div>
 <div id="ed-msg" style="font-size:.78rem;min-height:1.4em"></div>
 </div>
+
+<div class="popup" id="pop-bitem" onclick="closePop('pop-bitem')">
+  <div class="pop-in" onclick="event.stopPropagation()">
+    <div class="pop-ttl" style="color:#5dcaa5">🎒 アイテムを使用</div>
+    <div class="slist" id="bitem-list"></div>
+    <button class="btn" style="width:100%;margin-top:9px;color:var(--t3)" onclick="closePop('pop-bitem')">閉じる</button>
+  </div>
+</div>
+
 <script>
 const DIFF={
   easy:   {slots:2,hpM:.25,atkM:.15,shopM:.5, opM:1.5,initCP:500,rw:{common:20,rare:40,epic:30,legendary:10},coreRule:'boss5',  curseRate:0,  firstGuarantee:false,enemyDrop:.2},
@@ -296,7 +313,7 @@ const DIFF={
   hard:   {slots:1,hpM:1.8,atkM:1.8,shopM:1.5,opM:.8, initCP:50, rw:{common:70,rare:20,epic:8, legendary:2}, coreRule:'shop',   curseRate:.35,firstGuarantee:false,enemyDrop:.05},
   lunatic:{slots:1,hpM:4.0,atkM:3.0,shopM:2.5,opM:.6, initCP:0,  rw:{common:90,rare:8, epic:2, legendary:0}, coreRule:'special',curseRate:1.0,firstGuarantee:true, enemyDrop:.01},
 };
-const ITEM_DB=[
+let ITEM_DB=[
   {id:'pot_s',name:'ポーション(S)',desc:'HP+30',cost:10,type:'heal',val:30,rarity:'common'},
   {id:'pot_l',name:'ポーション(L)',desc:'HP+70',cost:22,type:'heal',val:70,rarity:'rare'},
   {id:'eth_s',name:'エーテル(S)',  desc:'SP+2', cost:12,type:'sp',  val:2, rarity:'common'},
@@ -304,13 +321,12 @@ const ITEM_DB=[
   {id:'op_f', name:'オーバーエナジー',desc:'OP+50',cost:40,type:'op',val:50,rarity:'epic'},
   {id:'core', name:'限界突破コア', desc:'パッシブ枠+1',cost:0,type:'core',val:1,rarity:'legendary'},
 ];
-const STNAMES={POISON:'毒',BURN:'燃焼',FREEZE:'氷結',STUN:'気絶',WEAKEN:'弱体',BLEED:'出血',SILENCE:'沈黙',ATK_BUFF:'ATKバフ',SURE:'必中',DEF_DOWN:'防御↓'};
 let SKILL_DB=[],PASSIVE_DB=[],ENEMY_DB=[],SC_DB=[],EDPOOLS={},SDECKS=[];
 let _raw='';
 
 function parseTxtData(txt){
   _raw=txt;
-  const sk=[],pa=[],en=[],sc=[];const edp={},sd=[];let sec='';
+  const sk=[],pa=[],en=[],sc=[],it=[];const edp={},sd=[];let sec='';
   for(const raw of txt.split('\n')){
     const line=raw.trim();
     if(!line||line.startsWith('#'))continue;
@@ -328,18 +344,22 @@ function parseTxtData(txt){
       sd.push({id:c[0],name:c[1],skillIds:c[2].split(',').map(x=>parseInt(x.trim())).filter(Boolean),unlockFloor:parseInt(c[3])||0,icon:c[4],desc:c[5]});
     if(sec==='spellcard'&&c.length>=9)
       sc.push({id:c[0],name:c[1],type:c[2],power:parseInt(c[3]),buff:parseInt(c[4]),hits:parseInt(c[5])||1,perAil:parseInt(c[6]),rarity:c[7],desc:c[8]});
+    // ★テキストからのアイテム読み込みを付け足し
+    if(sec==='item'&&c.length>=7)
+      it.push({id:c[0],name:c[1],type:c[2],val:parseInt(c[3])||0,cost:parseInt(c[4])||0,rarity:c[5],desc:c[6]});
   }
   SKILL_DB=sk;PASSIVE_DB=pa;
   ENEMY_DB=en.length?en:[{name:'スライム',hp:80,atk:8,opG:18,cp:10,spell:'溶解液',sMult:2.0,deck_type:'mixed',actions:1}];
   SC_DB=sc;EDPOOLS=edp;SDECKS=sd;
-  return{sk:sk.length,pa:pa.length,en:ENEMY_DB.length,sc:sc.length};
+  if(it.length>0) ITEM_DB = [...ITEM_DB.filter(i=>i.type==='core'), ...it]; // コアだけ残してマージ
+  return{sk:sk.length,pa:pa.length,en:ENEMY_DB.length,sc:sc.length,it:it.length};
 }
 async function loadTagFile(){
   try{
     const r=await fetch('tag_card.txt?_='+Date.now());
     if(!r.ok)throw new Error(r.status);
     const cnt=parseTxtData(await r.text());
-    setLS(`✔ 読込完了 スキル${cnt.sk}/パッシブ${cnt.pa}/敵${cnt.en}/スペカ${cnt.sc}`,'#5dcaa5');
+    setLS(`✔ 読込完了 スキル${cnt.sk}/パッシブ${cnt.pa}/敵${cnt.en}/スペカ${cnt.sc}/アイテム${cnt.it}`,'#5dcaa5');
   }catch(e){setLS(`⚠ tag_card.txt 読込失敗(${e})。ローカルサーバー(python -m http.server)が必要です。`,'#ef9f27');}
 }
 function setLS(m,c){const el=document.getElementById('load-st');if(el){el.textContent=m;el.style.color=c;}}
@@ -476,7 +496,8 @@ function initG(diff){
   G={diff,floor:1,turn:0,scPickRR:false,skPickRR:false,prevScr:null,
     synthA:null,synthB:null,synthFree:false,
     bs:{atkMult:1.0,critRate:5},
-    battle:{deck:[],hand:[],discard:[],excluded:[],handSize:4,playerActed:false},
+    // ★ passBonus (温存ボーナスフラグ) を追加
+    battle:{deck:[],hand:[],discard:[],excluded:[],handSize:4,playerActed:false,passBonus:false},
     p:{name:'プレイヤー',lv:1,exp:0,hp:100,maxHp:100,sp:6,maxSp:6,op:0,maxOp:100,
        atk:30,cp:cfg.initCP,statusList:[],items:[],passiveSlotMax:cfg.slots,
        passives:[],skills:[],spellcard:null},
@@ -493,7 +514,11 @@ function gainOPSP(sp){if(sp>0)G.p.op=Math.min(G.p.maxOp,G.p.op+sp*2);}
 function spawnEnemy(fl,diff,isBoss){
   const cfg=DIFF[diff];
   const base=ENEMY_DB[Math.min(fl-1,ENEMY_DB.length-1)];
-  const fm=Math.pow(1.15,fl-1);
+  
+  // ★難易度別のマイルドな成長倍率処理を付け足し
+  const diffScales = {easy:1.06, normal:1.15, hard:1.20, lunatic:1.25};
+  const fm=Math.pow(diffScales[diff]||1.15,fl-1);
+  
   const lf1=(diff==='lunatic'&&fl===1);
   const hp=Math.floor((lf1?50000:base.hp)*fm*cfg.hpM*(isBoss?2:1));
   const atk=Math.floor((lf1?base.atk*.3:base.atk)*fm*cfg.atkM*(isBoss?1.6:1));
@@ -651,7 +676,16 @@ function execCardTags(tags,nm){
   }
 }
 
-function endTurn(){if(!G.enemy||G.enemy.hp<=0)return;G.battle.playerActed=true;updateBUI();setTimeout(enemyTurn,300);}
+// ★「ターン温存」でSP全回復＋ドロー追加の処理を付け足し
+function endTurn(){
+  if(!G.enemy||G.enemy.hp<=0)return;
+  if(!G.battle.playerActed){
+    G.p.sp=G.p.maxSp; G.battle.passBonus=true;
+    addLog('💤ターン温存！SP全快＆次ターンドロー+1！','sy');
+  }
+  G.battle.playerActed=true;updateBUI();setTimeout(enemyTurn,300);
+}
+
 function enemyTurn(){
   const e=G.enemy,p=G.p;if(!e||e.hp<=0)return;
   const tt=getTTurnCrit();if(tt>0&&G.bs)G.bs.critRate=Math.min(95,G.bs.critRate+tt);
@@ -774,7 +808,14 @@ function drawCards(n){
     if(bd.deck.length)bd.hand.push(bd.deck.pop());
   }
 }
-function drawToFill(){const n=(G.battle.handSize+getDrawP())-G.battle.hand.length;if(n>0)drawCards(n);}
+
+// ★温存ボーナスをドロー枚数に反映する処理を付け足し
+function drawToFill(){
+  let extra=getDrawP();
+  if(G.battle.passBonus){extra++; G.battle.passBonus=false;}
+  const n=(G.battle.handSize+extra)-G.battle.hand.length;
+  if(n>0)drawCards(n);
+}
 
 function startBattle(isBoss,isDisg){
   G.turn=0;G.bs={atkMult:1.0,critRate:5};
@@ -1104,7 +1145,7 @@ function showRuOpts(uid){
 function doRankUp(i){const sk=window._ruSk,opt=window._ruOpts[i];if(!sk||!opt)return;if(G.p.cp<opt.cost){alert('CP不足');return;}G.p.cp-=opt.cost;opt.fn();sk._rc=(sk._rc||0)+1;maybeAddCurse(sk);addLog(`▲ ${sk.name}ランクアップ！${opt.label}`,'sy');closePop('pop-ru');updateTownUI();}
 
 function synthCost(){const a=G.synthA,b=G.synthB;if(!a||!b)return 0;if(G.synthFree)return 0;const r={common:0,rare:1,epic:2,legendary:3};const fm=1+Math.floor(G.floor/5)*.2;return Math.floor([30,60,100,200][Math.max(r[a.rarity]||0,r[b.rarity]||0)]*fm);}
-function highRar(a,b){const o=['common','rare','epic','legendary'];return o[Math.max(o.indexOf(a),o.indexOf(b))];}
+function highRar(a,b){const o=['common','rare','epic','legendary','mythic','divine'];return o[Math.max(o.indexOf(a),o.indexOf(b))];}
 function updateSynthUI(){
   const a=G.synthA,b=G.synthB;
   document.getElementById('synth-cp').textContent=`CP:${G.p.cp}${G.synthFree?' (無料)':''}`;
@@ -1163,7 +1204,7 @@ function renderViewer(){
   if(q)sk=sk.filter(s=>s.name.toLowerCase().includes(q)||s.tags.toLowerCase().includes(q));
   sk.sort((a,b)=>{
     const ta=parseTags(a.tags),tb=parseTags(b.tags);
-    if(_vsort==='rar'){const o={common:0,rare:1,epic:2,legendary:3};return(o[b.rarity]||0)-(o[a.rarity]||0);}
+    if(_vsort==='rar'){const o={common:0,rare:1,epic:2,legendary:3,mythic:4,divine:5};return(o[b.rarity]||0)-(o[a.rarity]||0);}
     if(_vsort==='atk'){const gA=t=>(t.find(x=>x.type==='ATK')?.val||0)*(t.find(x=>x.type==='HIT')?.val||1);return gA(tb)-gA(ta);}
     if(_vsort==='hit')return(tb.find(t=>t.type==='HIT')?.val||1)-(ta.find(t=>t.type==='HIT')?.val||1);
     if(_vsort==='heal')return(tb.find(t=>t.type==='HEAL')?.val||0)-(ta.find(t=>t.type==='HEAL')?.val||0);
@@ -1184,6 +1225,39 @@ function renderViewer(){
       <div style="font-size:.7rem;color:var(--t3);margin-top:3px;line-height:1.55">${autoDesc(tags)}</div>
     </div>`;
   }).join('');
+}
+
+// ★戦闘中のアイテム使用ポップアップ呼び出し処理を付け足し
+function openBattleItem(){
+  const list = G.p.items.map((it, i) => {
+    return `<div class="srow" onclick="useBattleItem(${i})">
+      <div><div style="font-size:.85rem;font-weight:700">${it.name} <span class="nr ${rarCls(it.rarity)}">${it.rarity}</span></div>
+      <div style="font-size:.71rem;color:var(--t2)">${it.desc}</div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('bitem-list').innerHTML = list || '<div style="color:var(--t3);font-size:.8rem;padding:10px">アイテムを持っていません</div>';
+  document.getElementById('pop-bitem').classList.add('show');
+}
+function useBattleItem(idx){
+  const it = G.p.items[idx];
+  if(!it) return;
+  G.p.items.splice(idx, 1);
+  closePop('pop-bitem');
+  addLog(`🎒 ${it.name}を使用！`, 'sy');
+  if(it.type === 'heal'){
+    G.p.hp = Math.min(G.p.maxHp, G.p.hp + it.val);
+    dfloat('+'+it.val, false, '#5dcaa5');
+  }else if(it.type === 'sp'){
+    G.p.sp = Math.min(G.p.maxSp, G.p.sp + it.val);
+  }else if(it.type === 'op'){
+    G.p.op = Math.min(G.p.maxOp, G.p.op + it.val);
+  }else if(it.type === 'bomb'){
+    const dmg = it.val * G.floor;
+    hitEnemy(dmg);
+  }else if(it.type === 'status'){
+    addSt(G.enemy, 'POISON', Math.floor(G.p.atk * 0.35), 3);
+  }
+  updateBUI();
 }
 
 function updateBUI(){
@@ -1212,6 +1286,10 @@ function updateBUI(){
   const bd=G.battle;
   document.getElementById('hcnt').textContent=bd.hand.length;document.getElementById('dcnt').textContent=bd.deck.length;
   document.getElementById('gcnt').textContent=bd.discard.length;document.getElementById('xcnt').textContent=bd.excluded.length;
+  
+  // アイテムボタンの更新を付け足し
+  document.getElementById('btn-item').textContent = `🎒 アイテム(${G.p.items.length})`;
+
   renderHand();
 }
 function renderStags(id,list){
@@ -1245,7 +1323,10 @@ function showTip(e,uid){const c=[...G.battle.hand,...G.p.skills].find(c=>c.uid==
 function moveTip(x,y){const t=TIP();t.style.left=Math.min(x+12,window.innerWidth-270)+'px';t.style.top=Math.max(8,Math.min(y-40,window.innerHeight-t.offsetHeight-8))+'px';}
 function hideTip(){const t=TIP();if(t)t.style.display='none';}
 function startLP(e,uid){endLP();_lp=setTimeout(()=>{const t=e.touches[0];showTip({clientX:t.clientX,clientY:t.clientY},uid);},500);}
-function endLP(){if(_lp){clearTimeout(_lp);_lp=null;}}
+
+// ★ツールチップが消えないバグの修正
+function endLP(){if(_lp){clearTimeout(_lp);_lp=null;} hideTip();}
+
 function buildTip(card){
   const tags=parseTags(card.tags);
   document.getElementById('tip-nm').textContent=card.name;
@@ -1271,7 +1352,10 @@ function dfloat(num,isCrit,overrideColor){
 }
 function addLog(m,t){const l=document.getElementById('blog');const d=document.createElement('div');d.className='le '+(t||'');d.textContent=m;l.appendChild(d);l.scrollTop=l.scrollHeight;}
 function clearLog(){document.getElementById('blog').innerHTML='';}
-function rarCls(r){return{common:'r-common',rare:'r-rare',epic:'r-epic',legendary:'r-legendary'}[r]||'r-common';}
+
+// ★rarClsに新レアリティの判定を付け足し
+function rarCls(r){return{common:'r-common',rare:'r-rare',epic:'r-epic',legendary:'r-legendary',mythic:'r-mythic',divine:'r-divine'}[r]||'r-common';}
+
 function renderTB(ts){
   return parseTags(ts).map(t=>{
     let cls='',lb=t.raw;
@@ -1329,7 +1413,7 @@ function saveMF(){try{const cur=parseInt(localStorage.getItem('mf_'+G.diff)||'0'
 function getMFs(){const r={};try{['easy','normal','hard','lunatic'].forEach(d=>{r[d]=parseInt(localStorage.getItem('mf_'+d)||'0');});}catch(e){}return r;}
 function updateTitleInfo(){const r=getMFs();const p=Object.entries(r).filter(([,v])=>v>0).map(([k,v])=>`${k[0].toUpperCase()+k.slice(1)}: ${v}F`);document.getElementById('mf-info').textContent=p.length?`最高記録: ${p.join(' / ')}`:'';}
 function openEditor(){document.getElementById('ed-area').value=_raw;document.getElementById('ed-msg').textContent='';showScr('editor');}
-function applyEditor(){const cnt=parseTxtData(document.getElementById('ed-area').value);edMsg(`✔ 反映 スキル${cnt.sk}/パッシブ${cnt.pa}/敵${cnt.en}/スペカ${cnt.sc}`,'#5dcaa5');}
+function applyEditor(){const cnt=parseTxtData(document.getElementById('ed-area').value);edMsg(`✔ 反映 スキル${cnt.sk}/パッシブ${cnt.pa}/敵${cnt.en}/スペカ${cnt.sc}/アイテム${cnt.it}`,'#5dcaa5');}
 function copyEditor(){navigator.clipboard.writeText(document.getElementById('ed-area').value).then(()=>edMsg('📋 コピーしました。tag_card.txtに貼り付けて保存してください','#ef9f27'));}
 async function reloadEditor(){await loadTagFile();document.getElementById('ed-area').value=_raw;edMsg('↺ 再読込しました','#5dcaa5');}
 function edMsg(m,c){const el=document.getElementById('ed-msg');el.textContent=m;el.style.color=c;}
