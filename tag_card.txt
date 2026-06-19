@@ -1,0 +1,243 @@
+# ================================================================
+# tag_card.txt — 弾幕カードローグライクRPG v2
+# タグ形式: スペース区切り、各タグはコロン区切り
+#
+# ── スキルタグ一覧 ──
+# ATTR:斬/魔/毒/炎/氷/光/闇/霊/特   属性
+# ATK:N        攻撃倍率N
+# HIT:N        N回連続攻撃
+# BUFF_ATK:N   ATK+N%バフ（3ターン）
+# HEAL:N       HP+N回復
+# BREAK:N      状態異常の敵にN倍（解除）
+# STATUS:NAME:rate:dur  状態異常付与
+#   名前: POISON/BURN/FREEZE/STUN/WEAKEN/BLEED/SILENCE
+# DRAIN:N      ダメージのN%HP吸収
+# DRAIN_MAXHP:N 敵最大HP削り（対人間）
+# CHARGE_OP:N  OP直接+N
+# TRIGGER:HIT:BUFF_ATK:N  ヒットごとATKバフ+N%
+# TRIGGER:HIT:CHARGE_OP:N ヒットごとOP+N
+# FAST         ターン消費なし（即攻）
+# EXCLUDE      使用後除外（1戦1回）
+# CURSE_DMG:N  使用後Nダメ反動（呪い）
+# CURSE_DEF:N  使用後防御-N%(1t)（呪い）
+# ================================================================
+
+[SKILL]
+# id|name|tags|sp|rarity|desc
+# ── 斬撃属性 ──
+1  |斬撃         |ATTR:斬 ATK:1.2 HIT:1                              |1|common   |基本の一撃
+2  |連撃         |ATTR:斬 ATK:0.7 HIT:3                              |2|common   |3連撃。OP・トリガー稼ぎの主力
+3  |強斬り       |ATTR:斬 ATK:2.0 HIT:1                              |2|rare     |単発の重い一撃
+4  |乱打         |ATTR:斬 ATK:0.5 HIT:6                              |3|rare     |6連撃。大量OP獲得
+5  |旋風斬       |ATTR:斬 ATK:0.8 HIT:4                              |2|rare     |4連続の旋回斬撃
+6  |真空斬       |ATTR:斬 ATK:1.5 HIT:1 BUFF_ATK:30                  |2|rare     |斬撃後にATKバフ
+7  |霞斬り       |ATTR:斬 ATK:1.0 HIT:1 FAST                         |1|rare     |即攻の素早い一撃
+8  |双剣乱舞     |ATTR:斬 ATK:0.6 HIT:10                             |4|epic     |10連続の双剣舞踏
+9  |滅殺剣       |ATTR:斬 ATK:3.0 HIT:2                              |4|epic     |2撃の超重攻撃
+10 |剛力斬       |ATTR:斬 ATK:4.0 HIT:1                              |3|epic     |力を込めた渾身の一撃
+11 |神速一刀     |ATTR:斬 ATK:5.0 HIT:1 FAST                         |3|epic     |即攻の超高速斬撃
+12 |乱裂斬       |ATTR:斬 ATK:0.9 HIT:5 BREAK:5                      |4|epic     |5連+ブレイク特効
+13 |縦断斬       |ATTR:斬 ATK:4.0 HIT:1 EXCLUDE                      |4|epic     |除外:1戦1回の縦断一刀
+14 |百烈斬       |ATTR:斬 ATK:0.3 HIT:15                             |5|legendary|15連続の怒濤の乱撃
+15 |無限刃       |ATTR:斬 ATK:1.0 HIT:8                              |4|legendary|8連の剣の嵐
+16 |神の一刀     |ATTR:斬 ATK:8.0 HIT:1 EXCLUDE                      |5|legendary|除外:神速の究極一刀
+17 |流星乱斬     |ATTR:斬 ATK:0.7 HIT:12 TRIGGER:HIT:BUFF_ATK:5      |5|legendary|12連+ヒットごとATKUP
+# ── 魔法属性 ──
+18 |魔弾         |ATTR:魔 ATK:1.8 HIT:1                              |2|rare     |凝縮した魔力の弾
+19 |魔法陣       |ATTR:魔 ATK:0.9 HIT:3 STATUS:STUN:25:1             |2|rare     |3連+気絶付与
+20 |雷撃         |ATTR:魔 ATK:2.2 HIT:1 STATUS:STUN:30:1             |2|rare     |雷の一撃+気絶
+21 |連鎖魔法     |ATTR:魔 ATK:1.0 HIT:5 TRIGGER:HIT:BUFF_ATK:15      |4|epic     |5連+ヒットごとATKUP15%
+22 |魔力爆発     |ATTR:魔 ATK:4.0 HIT:1                              |3|epic     |魔力を爆発させる
+23 |星降り       |ATTR:魔 ATK:0.7 HIT:7                              |3|rare     |7つの星を降り注ぐ
+24 |大魔法陣     |ATTR:魔 ATK:4.5 HIT:2 EXCLUDE                      |4|epic     |除外:強力な複合魔法陣
+25 |召喚術       |ATTR:魔 ATK:2.0 HIT:4                              |3|rare     |精霊を4体召喚して攻撃
+26 |魔力収束     |ATTR:魔 ATK:1.0 HIT:2 TRIGGER:HIT:BUFF_ATK:25      |2|rare     |2連+ヒットごとATKUP25%
+27 |魔法陣展開   |ATTR:魔 BUFF_ATK:200 FAST EXCLUDE                   |2|legendary|即攻除外:ATK+200%超強化
+28 |次元斬       |ATTR:魔 ATK:7.0 HIT:1 EXCLUDE                      |5|legendary|除外:次元を斬る究極魔法
+29 |禁呪         |ATTR:魔 ATK:8.0 HIT:1 CURSE_DMG:20                 |5|legendary|超高威力+呪い反動20
+30 |魔力の嵐     |ATTR:魔 ATK:1.5 HIT:6 STATUS:SILENCE:20:2          |4|epic     |6連+沈黙付与
+31 |封印術       |ATTR:魔 BUFF_ATK:300 FAST EXCLUDE                   |3|legendary|即攻除外:ATK+300%(最大強化)
+32 |魔力波動     |ATTR:魔 ATK:1.5 HIT:3 BUFF_ATK:50                  |3|epic     |3連+ATKバフ50%
+# ── 毒属性 ──
+33 |毒針         |ATTR:毒 ATK:0.6 HIT:1 STATUS:POISON:70:3           |1|common   |70%で毒付与3ターン
+34 |毒嵐         |ATTR:毒 ATK:0.5 HIT:5 STATUS:POISON:90:4           |3|epic     |5連毒攻撃+毒90%付与
+35 |猛毒牙       |ATTR:毒 ATK:1.5 HIT:1 STATUS:POISON:100:4          |2|rare     |確定毒付与4ターン
+36 |毒霧         |ATTR:毒 STATUS:POISON:100:3 FAST                    |1|rare     |即攻:確定毒付与(攻撃なし)
+37 |猛毒沼       |ATTR:毒 ATK:0.8 HIT:1 STATUS:POISON:100:6          |2|rare     |確定毒6ターン付与
+38 |毒蛇牙       |ATTR:毒 ATK:0.4 HIT:3 STATUS:POISON:80:3           |2|rare     |3連毒付与
+39 |毒素付与     |ATTR:毒 STATUS:POISON:100:5 BUFF_ATK:50 FAST        |2|epic     |即攻:確定毒5t+ATKバフ50%
+40 |毒爆発       |ATTR:毒 ATK:0.5 HIT:4 STATUS:POISON:100:3 BREAK:5  |4|epic     |4連毒+ブレイク5倍
+41 |猛毒結界     |ATTR:毒 ATK:0.2 HIT:8 STATUS:POISON:100:5          |4|legendary|8連確定毒5t
+42 |毒腺爆破     |ATTR:毒 ATK:0.3 HIT:10 STATUS:POISON:90:4 BREAK:6  |5|legendary|10連毒+ブレイク6倍
+43 |毒腐食破壊   |ATTR:毒 ATK:0.5 HIT:5 STATUS:POISON:90:3 BREAK:5   |4|epic     |5連毒付与+ブレイク
+44 |毒符         |ATTR:毒 ATK:1.0 HIT:1 STATUS:POISON:60:4 TRIGGER:HIT:BUFF_ATK:10|3|epic|毒+ヒットごとATKUP
+# ── 炎属性 ──
+45 |烈火         |ATTR:炎 ATK:1.5 HIT:1 STATUS:BURN:60:2             |2|rare     |燃焼付与60%
+46 |炎の一撃     |ATTR:炎 ATK:2.0 HIT:1 STATUS:BURN:80:2             |2|rare     |強力な炎撃+燃焼80%
+47 |炎嵐         |ATTR:炎 ATK:0.8 HIT:4 STATUS:BURN:70:2             |3|rare     |4連炎+燃焼付与
+48 |業火         |ATTR:炎 ATK:3.5 HIT:1 STATUS:BURN:90:3             |3|epic     |強い炎+燃焼90%3ターン
+49 |炎符         |ATTR:炎 STATUS:BURN:100:4 BUFF_ATK:80 FAST          |2|epic     |即攻:確定燃焼4t+ATKバフ
+50 |爆炎         |ATTR:炎 ATK:2.5 HIT:2 STATUS:BURN:80:3             |3|epic     |2連炎+燃焼付与
+51 |炎の竜牙     |ATTR:炎 ATK:1.0 HIT:5 STATUS:BURN:60:2 BREAK:6     |4|epic     |5連炎+ブレイク6倍
+52 |超業火       |ATTR:炎 ATK:6.0 HIT:1 STATUS:BURN:100:3 EXCLUDE     |5|legendary|除外:確定燃焼+超高火力
+53 |炎の渦       |ATTR:炎 ATK:0.5 HIT:8 STATUS:BURN:50:2             |4|legendary|8連炎の渦
+54 |焦熱地獄     |ATTR:炎 ATK:0.3 HIT:12 STATUS:BURN:80:3 BREAK:8    |5|legendary|12連炎+ブレイク8倍
+55 |爆炎連射     |ATTR:炎 ATK:1.2 HIT:3 STATUS:BURN:70:2             |3|epic     |3連炎弾+燃焼付与
+56 |炎の精霊     |ATTR:炎 ATK:2.0 HIT:1 BUFF_ATK:100 STATUS:BURN:70:2|4|epic    |炎一撃+ATK2倍+燃焼
+# ── 氷属性 ──
+57 |氷柱         |ATTR:氷 ATK:1.5 HIT:1 STATUS:FREEZE:50:2           |2|rare     |氷結付与50%
+58 |吹雪         |ATTR:氷 ATK:0.7 HIT:4 STATUS:FREEZE:60:2           |2|rare     |4連+氷結付与
+59 |氷の刃       |ATTR:氷 ATK:2.0 HIT:1 STATUS:FREEZE:70:2           |2|rare     |氷刃+氷結70%
+60 |氷嵐         |ATTR:氷 ATK:0.5 HIT:6 STATUS:FREEZE:80:3           |3|epic     |6連氷嵐+氷結80%
+61 |絶対零度     |ATTR:氷 ATK:5.0 HIT:1 STATUS:FREEZE:90:3 EXCLUDE    |4|epic     |除外:高火力+氷結90%
+62 |氷塊落下     |ATTR:氷 ATK:3.5 HIT:1 STATUS:FREEZE:100:2          |3|epic     |確定氷結+大ダメ
+63 |万年氷       |ATTR:氷 ATK:1.0 HIT:5 STATUS:FREEZE:70:3 BREAK:5   |4|epic     |5連氷+ブレイク5倍
+64 |氷河         |ATTR:氷 ATK:0.3 HIT:10 STATUS:FREEZE:90:4          |5|legendary|10連氷+氷結90%4t
+65 |凍結符       |ATTR:氷 STATUS:FREEZE:100:3 BUFF_ATK:100 FAST        |2|epic     |即攻:確定氷結3t+ATKバフ
+66 |霜の一撃     |ATTR:氷 ATK:2.5 HIT:1 STATUS:FREEZE:80:2           |2|rare     |強い氷撃+氷結80%
+67 |氷の嵐       |ATTR:氷 ATK:0.6 HIT:8 STATUS:FREEZE:70:3 BREAK:6   |5|legendary|8連氷嵐+ブレイク6倍
+# ── 光属性 ──
+68 |回復術       |ATTR:光 HEAL:30 FAST                                |2|common   |即攻:HP+30回復
+69 |大回復術     |ATTR:光 HEAL:80                                     |3|epic     |HP+80大回復
+70 |聖なる光     |ATTR:光 HEAL:50 BUFF_ATK:50 FAST                    |2|rare     |即攻:HP回復+ATKバフ50%
+71 |ヒール波動   |ATTR:光 HEAL:60 BUFF_ATK:50 FAST                    |3|epic     |即攻:HP+60+ATKバフ
+72 |神聖魔法     |ATTR:光 ATK:2.0 HIT:1 HEAL:20                      |3|rare     |攻撃+HP20回復の両立
+73 |聖剣         |ATTR:光 ATK:3.0 HIT:1 BUFF_ATK:100                 |3|epic     |強撃+ATK2倍バフ
+74 |光の弾幕     |ATTR:光 ATK:0.8 HIT:6 HEAL:20                      |4|epic     |6連攻撃+HP回復
+75 |浄化の光     |ATTR:光 HEAL:100 BUFF_ATK:100 FAST                  |4|legendary|即攻:HP+100+ATK2倍バフ
+76 |神の加護     |ATTR:光 HEAL:200 FAST EXCLUDE                        |4|legendary|即攻除外:HP+200大回復
+77 |聖光波       |ATTR:光 ATK:1.5 HIT:3 HEAL:15                      |3|rare     |3連攻撃+HP回復
+78 |光の鎧       |ATTR:光 BUFF_ATK:150 FAST                           |2|rare     |即攻:ATK+150%強化(攻撃なし)
+79 |神聖爆発     |ATTR:光 ATK:5.0 HIT:1 HEAL:50 EXCLUDE               |5|legendary|除外:超大技+HP50回復
+# ── 闇属性 ──
+80 |闇の一撃     |ATTR:闇 ATK:2.0 HIT:1 STATUS:WEAKEN:50:3           |2|rare     |弱体化付与50%3ターン
+81 |ドレイン     |ATTR:闇 ATK:1.5 HIT:1 DRAIN:30                     |2|rare     |ダメージ30%HP吸収
+82 |闇の連打     |ATTR:闇 ATK:0.8 HIT:4 STATUS:WEAKEN:40:2           |3|rare     |4連+弱体化付与
+83 |呪いの刃     |ATTR:闇 ATK:1.8 HIT:1 STATUS:WEAKEN:60:3           |2|rare     |強弱体化付与60%
+84 |暗黒魔法     |ATTR:闇 ATK:3.0 HIT:1 STATUS:WEAKEN:70:3           |3|epic     |強力な暗黒魔法+弱体化
+85 |生命吸収     |ATTR:闇 ATK:2.0 HIT:3 DRAIN:50                     |4|epic     |3連+ダメ50%HP吸収
+86 |呪縛符       |ATTR:闇 STATUS:SILENCE:50:2 STATUS:WEAKEN:80:3 FAST  |2|epic     |即攻:沈黙+弱体化(攻撃なし)
+87 |魂吸収       |ATTR:闇 ATK:1.0 HIT:5 DRAIN:40                     |4|epic     |5連+ダメ40%HP吸収
+88 |死の宣告     |ATTR:闇 ATK:6.0 HIT:1 CURSE_DMG:30                 |5|legendary|超火力+呪い反動30
+89 |虚無の刃     |ATTR:闇 ATK:4.0 HIT:2 STATUS:WEAKEN:90:4           |4|legendary|2連超強撃+強弱体化
+90 |暗黒の嵐     |ATTR:闇 ATK:0.5 HIT:10 STATUS:WEAKEN:60:3 DRAIN:20  |5|legendary|10連+弱体化+吸収
+91 |呪いの連鎖   |ATTR:闇 ATK:0.7 HIT:5 STATUS:WEAKEN:70:3 TRIGGER:HIT:BUFF_ATK:15|4|legendary|5連弱体化+ヒットごとATKUP
+# ── 霊属性 ──
+92 |霊力波       |ATTR:霊 ATK:1.5 HIT:1 TRIGGER:HIT:CHARGE_OP:5      |2|rare     |1撃+ヒットごとOP+5
+93 |霊力砲       |ATTR:霊 ATK:3.0 HIT:1 TRIGGER:HIT:CHARGE_OP:10     |3|epic     |強撃+ヒットごとOP+10
+94 |霊弾         |ATTR:霊 ATK:0.8 HIT:4 TRIGGER:HIT:BUFF_ATK:10      |3|rare     |4連+ヒットごとATKUP10%
+95 |霊力爆発     |ATTR:霊 ATK:4.0 HIT:1 TRIGGER:HIT:CHARGE_OP:20 EXCLUDE|4|epic |除外:強撃+ヒットごとOP+20
+96 |霊力の嵐     |ATTR:霊 ATK:0.5 HIT:8 TRIGGER:HIT:BUFF_ATK:15      |4|epic     |8連+ヒットごとATKUP15%
+97 |霊力チャージ |ATTR:霊 CHARGE_OP:30 BUFF_ATK:50 FAST               |1|rare     |即攻:OP+30+ATKバフ(攻撃なし)
+98 |霊力大砲     |ATTR:霊 ATK:5.0 HIT:1 CHARGE_OP:20                 |4|epic     |強撃+OP+20直接チャージ
+99 |霊力解放     |ATTR:霊 BUFF_ATK:200 CHARGE_OP:50 FAST EXCLUDE       |3|legendary|即攻除外:ATK+200%+OP+50
+100|霊力波動     |ATTR:霊 ATK:1.2 HIT:5 TRIGGER:HIT:CHARGE_OP:5      |4|epic     |5連+ヒットごとOP+5
+101|霊力の極意   |ATTR:霊 ATK:2.0 HIT:3 BUFF_ATK:50 CHARGE_OP:15     |4|epic     |3連+バフ+OP15獲得
+102|霊力結界     |ATTR:霊 BUFF_ATK:200 TRIGGER:HIT:CHARGE_OP:30 FAST EXCLUDE|4|legendary|即攻除外:超強化+OP稼ぎ
+# ── 特殊 ──
+103|結界砕き     |ATTR:特 ATK:3.0 HIT:1 BREAK:7                      |4|epic     |状態異常の敵に7倍ブレイク
+104|魔砲         |ATTR:特 ATK:5.0 HIT:1 BREAK:10 EXCLUDE              |5|legendary|除外:1戦1回の10倍ブレイク
+105|炎爆砕       |ATTR:特 ATK:1.0 HIT:3 STATUS:BURN:80:2 BREAK:6     |4|epic     |3連炎付与+ブレイク6倍
+106|氷砕き       |ATTR:特 ATK:2.0 HIT:2 STATUS:FREEZE:70:2 BREAK:5   |3|epic     |2連氷付与+ブレイク5倍
+107|全力一撃     |ATTR:特 ATK:10.0 HIT:1 CURSE_DMG:50                 |5|legendary|超高火力+呪い反動50
+108|連鎖爆発     |ATTR:特 ATK:1.5 HIT:5 TRIGGER:HIT:BUFF_ATK:20 BREAK:4|5|legendary|5連+バフ+ブレイク4倍
+109|鬼神の一撃   |ATTR:特 ATK:8.0 HIT:1 EXCLUDE                       |5|legendary|除外:鬼神の超一撃
+110|最後の一撃   |ATTR:特 ATK:15.0 HIT:1 CURSE_DMG:100 EXCLUDE        |5|legendary|除外:最大火力+反動100
+111|乱打連撃     |ATTR:特 ATK:0.4 HIT:12 TRIGGER:HIT:BUFF_ATK:10     |5|legendary|12連+ヒットごとATKUP10%
+112|バフ連撃     |ATTR:特 BUFF_ATK:100 ATK:0.8 HIT:3                  |3|epic     |ATK+100%後3連撃
+113|鼓舞         |ATTR:特 BUFF_ATK:200 FAST EXCLUDE                    |2|legendary|即攻除外:ATK+200%超バフ
+114|毒炎複合     |ATTR:特 ATK:0.5 HIT:5 STATUS:POISON:80:3 STATUS:BURN:60:2|4|epic|5連毒炎複合付与
+115|氷毒複合     |ATTR:特 ATK:0.5 HIT:4 STATUS:FREEZE:70:2 STATUS:POISON:70:3|4|epic|4連氷毒複合付与
+
+[PASSIVE]
+# id|name|effects|rarity|desc
+p1  |戦士の気概     |BUFF_ATK_PERM:10       |common   |ATK永続+10%
+p2  |魔力循環       |REGEN_SP:1             |common   |ターン開始SP+1
+p3  |鋼の意志       |MAX_HP:20              |common   |最大HP+20
+p4  |回復の加護     |HEAL_BOOST:20          |common   |回復効果+20%
+p5  |連撃の才       |BUFF_ATK_PERM:25       |rare     |ATK永続+25%
+p6  |OP増幅         |OP_BOOST:30            |rare     |OP獲得量+30%
+p7  |魔力圧縮       |REGEN_SP:2             |epic     |ターン開始SP+2
+p8  |覇王の血       |BUFF_ATK_PERM:50       |epic     |ATK永続+50%
+p9  |不死身         |TOUGH                  |legendary|HP30%以下で被ダメ半減
+p10 |OP収集家       |OP_BOOST:50            |epic     |OP獲得量+50%
+p11 |ヒットごとに闘志|TRIG_HIT_ATK:10       |epic     |攻撃ヒットごとにATK×+10%(戦闘内)
+p12 |背水の闘志     |TRIG_RCV_ATK:50        |epic     |被ダメのたび失HPの50%分ATK永続増加
+p13 |集中の境地     |TRIG_TURN_CRIT:20      |rare     |毎ターン開始時クリット率+20%
+p14 |幸運の手       |DRAW_PLUS:1            |rare     |毎ターン1枚余分にドロー
+p15 |毒の親和       |TRIG_HIT_ATK:5         |rare     |攻撃ヒットごとにATK+5%(戦闘内)
+p16 |炎の加護       |OP_BOOST:20 BUFF_ATK_PERM:15|rare |OP+20%&ATK永続+15%
+p17 |氷の防護       |MAX_HP:50              |rare     |最大HP+50
+p18 |闇の力         |TRIG_RCV_ATK:30        |rare     |被ダメのたびATK永続+30%分増加
+p19 |霊力の源       |REGEN_SP:1 OP_BOOST:20 |epic     |毎ターンSP+1&OP+20%
+p20 |神の加護       |MAX_HP:100 BUFF_ATK_PERM:30|epic  |HP+100&ATK永続+30%
+p21 |覇王の道       |BUFF_ATK_PERM:80       |legendary|ATK永続+80%
+p22 |無限の魔力     |REGEN_SP:3             |legendary|毎ターンSP+3
+p23 |神聖な盾       |TOUGH                  |epic     |HP30%以下で被ダメ半減
+p24 |連鎖の才能     |TRIG_HIT_ATK:15        |legendary|ヒットごとATK+15%(戦闘内)
+p25 |宇宙の理       |OP_BOOST:80 BUFF_ATK_PERM:50|legendary|OP+80%&ATK永続+50%
+p26 |ドロー強化     |DRAW_PLUS:2            |epic     |毎ターン2枚余分にドロー
+
+[ENEMY]
+# name|hp|atk|opG|cp|spell|sMult|deck_type|actions
+ゴブリン       |60  |12 |15|8 |ゴブリン拳         |2.5|slash  |1
+スライム       |80  |8  |18|10|溶解液             |2.0|poison |1
+スケルトン     |100 |15 |20|12|骸骨の一撃         |2.8|slash  |1
+魔法使い       |70  |20 |22|14|紫電一閃           |3.2|magic  |1
+毒蛇           |90  |14 |20|13|猛毒の牙           |2.6|poison |1
+炎の精霊       |110 |18 |25|16|業火の息吹         |3.0|fire   |1
+氷の精霊       |120 |16 |23|15|吹雪嵐             |2.8|ice    |1
+ドレイン蝙蝠   |95  |17 |22|14|生命吸収           |2.7|drain  |1
+闇の騎士       |150 |22 |25|18|虚無の一撃         |3.3|dark   |1
+ドラゴン       |200 |30 |30|30|竜炎ブレスストーム |4.0|fire   |1
+ネクロマンサー |150 |25 |25|20|怨霊 黒の彼岸花    |3.5|magic  |1
+鋼の騎士       |220 |28 |28|25|鉄壁の一撃         |3.7|slash  |1
+堕天使         |280 |35 |30|35|聖剣の一撃         |4.2|mixed  |1
+魔王           |350 |42 |35|60|暗黒の終焉         |5.0|boss   |2
+
+[ENEMY_DECK]
+# style|skill_ids_available
+slash  |1,2,3,4,5,7,9,10
+poison |33,35,36,37,38,34
+fire   |45,46,47,48,50,55
+magic  |18,19,20,22,23,25,26
+ice    |57,58,59,60,62,66
+dark   |80,81,82,83,84,86
+drain  |81,85,87,81,87,80
+mixed  |1,18,33,45,57,80,92
+boss   |9,10,11,13,24,28,31,61,95,99,104,109
+
+[INITIAL_DECK]
+# id|name|skill_ids|unlock_floor|icon|desc
+basic  |初期デッキ    |1,2,2,5,68     |0 |⚔|攻撃・連撃・バフのバランス型（初期解放）
+slash  |剣士デッキ    |3,4,5,7,9      |5 |🗡|斬撃特化の高火力型（5F到達で解放）
+poison |毒師デッキ    |33,35,36,40,68 |10|☠|毒付与からブレイクで止めを刺す（10F解放）
+fire   |炎使いデッキ  |45,47,49,51,68 |15|🔥|燃焼蓄積から炎ブレイクフィニッシュ（15F解放）
+magic  |魔法使いデッキ|18,21,26,97,78 |20|✨|魔法コンボ&トリガー特化（20F解放）
+speed  |速攻デッキ    |7,11,65,70,97  |25|⚡|FASTカード連鎖コンボ型（25F解放）
+drain  |吸収デッキ    |81,85,87,90,68 |30|🌑|ライフスティール&弱体化型（30F解放）
+legend |英雄デッキ    |11,27,65,99,113|40|👑|除外カードで圧倒する英雄型（40F解放）
+
+[SPELLCARD]
+# id|name|type|power|buff|hits|perAil|rarity|desc
+# type: SINGLE/MULTI/SELFBUFF/FULLBREAK
+sc0|弾符「弾幕バレット」|SINGLE|10|0|1|0|common|単体10倍。シンプルな一撃必殺
+sc1|散符「拡散弾幕」|MULTI|6|0|3|0|common|3連6倍。OP稼ぎ後の連携向け
+sc2|気符「覚醒解放」|SELFBUFF|5|100|1|0|common|ATK+100%後5倍。実質10倍超
+sc3|雷符「電光石火」|SINGLE|14|0|1|0|rare|単体14倍の雷撃
+sc4|氷符「コールドブラスト」|MULTI|5|0|5|0|rare|5連5倍。状態異常後に
+sc5|炎符「フレイムバースト」|SELFBUFF|7|80|1|0|rare|ATK+80%後7倍
+sc_e1|奇跡「スターダストレヴァリエ」|SELFBUFF|10|100|1|0|epic|ATK+100%(3t)後10倍
+sc_e2|毒符「ポイズンブレイカー」|FULLBREAK|10|0|1|5|epic|10倍+状態異常×5倍
+sc_e3|恋符「マスタースパーク」|SINGLE|20|0|1|0|epic|単体20倍
+sc_e4|風符「サイクロンブレード」|MULTI|8|0|5|0|epic|5連8倍=計40倍
+sc_e5|霊符「霊力大爆発」|SELFBUFF|12|150|1|0|epic|ATK+150%後12倍
+sc_e6|滅符「デストラクションブレイク」|FULLBREAK|12|0|1|8|epic|12倍+状態異常×8倍
+sc_l1|夢想「封印解放」|SELFBUFF|15|200|1|0|legendary|ATK+200%(5t)後15倍
+sc_l2|「終焉の弾幕」|FULLBREAK|15|0|1|10|legendary|15倍+状態異常×10倍
+sc_l3|禁弾「スターダストリバーセイント」|SINGLE|25|0|1|0|legendary|必中25倍
+sc_l4|天符「グランドクロス」|MULTI|12|0|7|0|legendary|7連12倍=計84倍
+sc_l5|神符「神撃・宇宙論」|SELFBUFF|20|300|1|0|legendary|ATK+300%後20倍
+sc_l6|「万物終焉の一撃」|FULLBREAK|20|0|1|15|legendary|20倍+状態異常×15倍
+sc_l7|幻符「夢幻泡影」|SELFBUFF|18|250|1|0|legendary|ATK+250%(4t)後18倍
+sc_l8|覇符「宇宙制覇スペクタクル」|MULTI|15|0|5|0|legendary|5連15倍=計75倍
