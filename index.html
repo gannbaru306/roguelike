@@ -166,19 +166,59 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 @keyframes brf{0%{opacity:1;}100%{opacity:0;}}
 @keyframes brta{0%{transform:translateX(-50%) scale(.5);opacity:1;}50%{transform:translateX(-50%) scale(1.3);}100%{transform:translateX(-50%);opacity:0;}}
 .fastflash{position:fixed;inset:0;background:rgba(75,232,160,.1);pointer-events:none;z-index:188;animation:brf .3s ease-out forwards;}
+.charmflash{position:fixed;inset:0;background:rgba(255,215,64,.35);pointer-events:none;z-index:190;animation:charmpulse 1.1s ease-out forwards;display:flex;align-items:center;justify-content:center;}
+.charmflash span{font-size:1.6rem;font-weight:900;color:#ffd740;text-shadow:0 0 18px rgba(0,0,0,.8),0 0 6px #ffd740;animation:charmtext 1.1s ease-out forwards;}
+@keyframes charmpulse{0%{opacity:0;}15%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
+@keyframes charmtext{0%{transform:scale(.5);opacity:0;}20%{transform:scale(1.15);opacity:1;}35%{transform:scale(1);}100%{transform:scale(1);opacity:1;}}
 .dfloat{position:fixed;font-weight:900;pointer-events:none;animation:flu 1.2s ease-out forwards;z-index:200;}
 @keyframes flu{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-65px);opacity:0;}}
 .lvflash{position:fixed;inset:0;background:rgba(93,202,165,.1);pointer-events:none;z-index:189;animation:brf .7s ease-out forwards;}
+/* ── Settings / Admin panel ── */
+.settings-btn{position:fixed;top:12px;right:12px;background:var(--panel);border:1px solid var(--border);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:55;font-size:1.05rem;color:var(--t2);}
+.settings-btn:hover{border-color:var(--accent);color:var(--accent);}
+.set-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
+.set-row:last-child{border-bottom:none;}
+.set-lbl{font-size:.85rem;}.set-sub{font-size:.68rem;color:var(--t3);margin-top:2px;}
+.toggle{position:relative;width:42px;height:23px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;cursor:pointer;flex-shrink:0;}
+.toggle.on{background:var(--accent);border-color:var(--accent);}
+.toggle .kb{position:absolute;top:2px;left:2px;width:17px;height:17px;background:var(--text);border-radius:50%;transition:left .15s;}
+.toggle.on .kb{left:21px;}
+#admin-panel{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:82vw;background:var(--panel);border-right:1px solid var(--danger);z-index:300;transform:translateX(-100%);transition:transform .2s;overflow-y:auto;padding:12px;}
+#admin-panel.open{transform:translateX(0);}
+#admin-toggle-tab{position:fixed;top:50%;left:0;transform:translateY(-50%);background:var(--danger);color:#fff;border-radius:0 8px 8px 0;padding:10px 5px;font-size:.7rem;writing-mode:vertical-rl;cursor:pointer;z-index:299;display:none;letter-spacing:1px;}
+.admin-sec{margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:12px;}
+.admin-sec h4{font-size:.76rem;color:var(--danger);margin-bottom:7px;}
+.admin-row{display:flex;gap:5px;margin-bottom:5px;align-items:center;}
+.admin-row input,.admin-row select{background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 6px;font-size:.72rem;flex:1;min-width:0;}
+.admin-row button{background:var(--danger);color:#fff;border:none;border-radius:5px;padding:4px 8px;font-size:.7rem;cursor:pointer;white-space:nowrap;}
+.admin-chk-list{max-height:130px;overflow-y:auto;font-size:.7rem;}
+.admin-chk-list label{display:flex;align-items:center;gap:5px;padding:2px 0;cursor:pointer;}
+.asc-chip{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:6px 11px;font-size:.7rem;cursor:pointer;color:var(--t2);transition:all .13s;}
+.asc-chip.on{border-color:var(--danger);color:var(--danger);background:rgba(226,75,74,.12);}
 
 </style>
 </head>
 <body>
+<button class="settings-btn" onclick="openSettings()">⚙</button>
+<div class="popup" id="pop-settings"><div class="pop-in" onclick="event.stopPropagation()">
+<div class="pop-ttl">⚙ 設定</div>
+<div class="set-row"><div><div class="set-lbl">演出（アニメーション）</div><div class="set-sub">ダメージ演出・フラッシュ・スペカ演出など</div></div><div class="toggle" id="tg-effects" onclick="toggleSetting('effects')"><div class="kb"></div></div></div>
+<div class="set-row"><div><div class="set-lbl">フロア移動の待ち時間</div><div class="set-sub">次フロアへ進む際のカウントダウン演出</div></div><div class="toggle" id="tg-floorwait" onclick="toggleSetting('floorWait')"><div class="kb"></div></div></div>
+<div class="set-row" style="flex-direction:column;align-items:stretch;gap:6px">
+<div class="set-lbl">管理者モード</div>
+<div class="set-sub" id="admin-status">未認証</div>
+<div style="display:flex;gap:6px"><input id="admin-pass" type="password" placeholder="パスワード" style="flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.78rem"><button class="btn" style="padding:6px 12px;font-size:.75rem" onclick="tryAdminLogin()">認証</button></div>
+</div>
+<button class="btn" style="width:100%;margin-top:9px;color:var(--t3)" onclick="closePop('pop-settings')">閉じる</button>
+</div></div>
+<div id="admin-toggle-tab" onclick="toggleAdminPanel()">ADMIN</div>
+<div id="admin-panel"></div>
 <div id="dmk-ol"><canvas id="dmk-canvas"></canvas>
 <div class="dmk-info"><div class="dmk-declare" id="dmk-decl">SPELL CARD</div><div class="dmk-name" id="dmk-nm">スペルカード</div><div class="dmk-dmg" id="dmk-dmg">0 DMG</div></div></div>
 <div id="tooltip"><div class="tip-nm" id="tip-nm"></div><div id="tip-cost"></div><div id="tip-desc" style="font-size:.76rem;color:var(--t2);margin-top:3px"></div><div class="tip-div"></div><div class="tip-auto" id="tip-auto"></div></div>
 <button class="relic-btn" id="relic-btn" onclick="openRelicViewer()" style="display:none">✦ レリック</button>
 <button class="relic-btn" id="pass-view-btn" onclick="openPassiveViewer()" style="left:auto;right:12px;bottom:12px;border-color:var(--a2);color:var(--a2);display:none">◈ パッシブ</button>
-<div class="popup" id="pop-pass-view"><div class="pop-in" onclick="event.stopPropagation()"><div class="pop-ttl" style="color:var(--a2)">◈ 所持パッシブ（確認のみ）</div><div id="pass-view-list"></div><button class="btn" style="width:100%;margin-top:9px;color:var(--t3)" onclick="closePop(\'pop-pass-view\')">閉じる</button></div></div>
+<div class="popup" id="pop-pass-view"><div class="pop-in" onclick="event.stopPropagation()"><div class="pop-ttl" style="color:var(--a2)">◈ 所持パッシブ（確認のみ）</div><div id="pass-view-list"></div><button class="btn" style="width:100%;margin-top:9px;color:var(--t3)" onclick="closePop('pop-pass-view')">閉じる</button></div></div>
 <div class="screen" id="scr-title">
 <div class="logo">弾幕 ✦ カードローグライクRPG</div>
 <div style="color:var(--t2);font-size:.88rem">山札を組み、コンボで敵を滅ぼせ</div>
@@ -189,6 +229,8 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 <div class="diff-btn" onclick="startGame('hard')">Hard<br><span style="font-size:.67rem;color:var(--t2)">CP50/敵強/呪い35%</span></div>
 <div class="diff-btn luna" onclick="startGame('lunatic')">Lunatic<br><span style="font-size:.67rem;color:var(--t2)">CP0/狂気/呪い100%</span></div>
 </div>
+<div style="margin-top:10px;font-size:.72rem;color:var(--t3)">アセンション（任意・重ねがけ可）</div>
+<div id="asc-chips" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:5px"></div>
 <div class="tbtns">
 <button class="btn" style="border-color:var(--a3);color:var(--a3);font-size:.8rem" onclick="openViewer('skill')">📚 図鑑</button>
 <button class="btn" style="border-color:var(--accent);color:var(--accent);font-size:.8rem" onclick="dlGame()">💾 DL</button>
@@ -253,6 +295,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 <div class="rchip"><div class="rl">ターン</div><div class="rv" id="res-tn">0</div></div>
 </div>
 <div class="rec-box" id="rec-box" style="display:none"><div style="font-size:.72rem;color:var(--t3);margin-bottom:4px">🏆 最大ダメージ</div><div id="rec-dmg" style="font-size:.84rem;color:var(--a3)"></div></div>
+<div class="rec-box" id="res-relic-box" style="display:none"><div style="font-size:.72rem;color:var(--t3);margin-bottom:4px">✦ レリック入手</div><div id="res-relic-txt" style="font-size:.84rem;color:var(--mys)"></div></div>
 <button class="btn" id="res-btn" onclick="afterBattle()">続ける</button>
 <button class="btn" onclick="gotoTitle()" style="color:var(--t3)">タイトルへ</button>
 </div>
@@ -314,6 +357,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 <div class="popup" id="pop-shop" onclick="closePop('pop-shop')"><div class="pop-in" onclick="event.stopPropagation()"><div class="pop-ttl">🛒 ショップ — CP: <span id="shop-cp">0</span></div><div class="slist" id="shop-list"></div><button class="btn" style="width:100%;margin-top:9px;color:var(--t3)" onclick="closePop('pop-shop')">閉じる</button></div></div>
 <div class="popup" id="pop-del" onclick="closePop('pop-del')"><div class="pop-in" onclick="event.stopPropagation()"><div class="pop-ttl">🗑 カード削除 — CP: <span id="del-cp">0</span></div><div style="font-size:.75rem;color:var(--t2);margin-bottom:8px">削除するカードを選択してください（選んだカードがデッキから永久に除去されます）</div><div id="del-grid" class="sgrid"></div><button class="btn" style="width:100%;margin-top:9px;color:var(--t3)" onclick="closePop('pop-del')">閉じる</button></div></div>
 <div class="screen" id="scr-event"><div class="ev-icon" id="ev-icon">📜</div><div class="ev-title" id="ev-title">イベント</div><div class="ev-desc" id="ev-desc"></div><div class="ev-opts" id="ev-opts"></div></div>
+<div class="popup" id="pop-ev-result" onclick="event.stopPropagation()"><div class="pop-in" onclick="event.stopPropagation()"><div class="pop-ttl" style="color:var(--a3)">結果</div><div id="ev-result-list" style="display:flex;flex-direction:column"></div><button class="btn" style="width:100%;margin-top:10px;color:var(--a3);border-color:var(--a3);font-weight:700" onclick="confirmEventResult()">確認して進む</button></div></div>
 <div class="screen" id="scr-viewer">
 <div style="display:flex;align-items:center;gap:9px"><button class="btn" style="padding:5px 11px;font-size:.74rem" onclick="closeViewer()">← 戻る</button><span style="font-size:.95rem;font-weight:700;color:var(--a3)">📚 図鑑</span><span style="font-size:.72rem;color:var(--t3);margin-left:auto" id="vcnt"></span></div>
 <div class="vtabs" id="vtabs"></div>
@@ -328,15 +372,34 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 </div>
 
 <script>
-window.TAG_DATA = "# ================================================================\n# tag_card.txt \u2014 \u5f3e\u5e55\u30ab\u30fc\u30c9\u30ed\u30fc\u30b0\u30e9\u30a4\u30afRPG\n# ================================================================\n# \u30bf\u30b0\u5f62\u5f0f: \u30b9\u30da\u30fc\u30b9\u533a\u5207\u308a\u3001\u30b3\u30ed\u30f3\u533a\u5207\u308a\n# \u5165\u624b\u533a\u5206: shop/edrop/boss/drop(\u901a\u5e38) - HTML\u304c\u30d5\u30a3\u30eb\u30bf\u306b\u4f7f\u7528\n# ================================================================\n\n[SKILL]\n# id|name|tags|sp|rarity|desc|source\n# \u2500\u2500 \u65ac\u6483\u5c5e\u6027 \u2500\u2500\n1  |\u65ac\u6483         |ATTR:\u65ac ATK:1.2 HIT:1                              |1|common   |\u57fa\u672c\u306e\u4e00\u6483|drop\n2  |\u9023\u6483         |ATTR:\u65ac ATK:0.7 HIT:3                              |2|common   |3\u9023\u6483|drop\n3  |\u5f37\u65ac\u308a       |ATTR:\u65ac ATK:2.0 HIT:1                              |2|rare     |\u5358\u767a\u91cd\u653b\u6483|drop\n4  |\u4e71\u6253         |ATTR:\u65ac ATK:0.5 HIT:6                              |3|rare     |6\u9023\u6483|drop\n5  |\u65cb\u98a8\u65ac       |ATTR:\u65ac ATK:0.8 HIT:4                              |2|rare     |4\u9023\u56de\u8ee2\u65ac|drop\n6  |\u771f\u7a7a\u65ac       |ATTR:\u65ac ATK:1.5 HIT:1 BUFF_ATK:30                  |2|rare     |\u65ac+ATK\u30d0\u30d5|drop\n7  |\u971e\u65ac\u308a       |ATTR:\u65ac ATK:1.0 HIT:1 FAST                         |1|rare     |\u5373\u653b\u306e\u7d20\u65e9\u3044\u65ac\u6483|drop\n8  |\u53cc\u5263\u4e71\u821e     |ATTR:\u65ac ATK:0.6 HIT:10                             |4|epic     |10\u9023\u53cc\u5263|drop\n9  |\u6ec5\u6bba\u5263       |ATTR:\u65ac ATK:3.0 HIT:2                              |4|epic     |2\u6483\u8d85\u91cd\u653b\u6483|drop\n10 |\u525b\u529b\u65ac       |ATTR:\u65ac ATK:4.0 HIT:1                              |3|epic     |\u6e3e\u8eab\u306e\u91cd\u65ac|drop\n11 |\u795e\u901f\u4e00\u5200     |ATTR:\u65ac ATK:5.0 HIT:1 FAST                         |3|epic     |\u5373\u653b\u306e\u8d85\u901f\u65ac|drop\n12 |\u4e71\u88c2\u65ac       |ATTR:\u65ac ATK:0.9 HIT:5 BREAK:5                      |4|epic     |5\u9023+\u30d6\u30ec\u30a4\u30af|drop\n13 |\u7e26\u65ad\u65ac       |ATTR:\u65ac ATK:4.0 HIT:1 EXCLUDE                      |4|epic     |\u9664\u59161\u62261\u56de|drop\n14 |\u767e\u70c8\u65ac       |ATTR:\u65ac ATK:0.3 HIT:15                             |5|legendary|15\u9023\u4e71\u6483|drop\n15 |\u7121\u9650\u5203       |ATTR:\u65ac ATK:1.0 HIT:8                              |4|legendary|8\u9023\u5263\u306e\u5d50|drop\n16 |\u795e\u306e\u4e00\u5200     |ATTR:\u65ac ATK:8.0 HIT:1 EXCLUDE                      |5|legendary|\u9664\u5916:\u7a76\u6975\u4e00\u5200|drop\n17 |\u6d41\u661f\u4e71\u65ac     |ATTR:\u65ac ATK:0.7 HIT:12 TRIGGER:HIT:BUFF_ATK:5      |5|legendary|12\u9023+\u30d2\u30c3\u30c8ATKUP|drop\n# \u2500\u2500 \u9b54\u6cd5\u5c5e\u6027 \u2500\u2500\n18 |\u9b54\u5f3e         |ATTR:\u9b54 ATK:1.8 HIT:1                              |2|rare     |\u51dd\u7e2e\u9b54\u529b\u5f3e|drop\n19 |\u9b54\u6cd5\u9663       |ATTR:\u9b54 ATK:0.9 HIT:3 STATUS:STUN:25:1             |2|rare     |3\u9023+\u6c17\u7d76|drop\n20 |\u96f7\u6483         |ATTR:\u9b54 ATK:2.2 HIT:1 STATUS:STUN:30:1             |2|rare     |\u96f7+\u6c17\u7d76|drop\n21 |\u9023\u9396\u9b54\u6cd5     |ATTR:\u9b54 ATK:1.0 HIT:5 TRIGGER:HIT:BUFF_ATK:15      |4|epic     |5\u9023+\u30d2\u30c3\u30c8ATKUP15%|drop\n22 |\u9b54\u529b\u7206\u767a     |ATTR:\u9b54 ATK:4.0 HIT:1                              |3|epic     |\u9b54\u529b\u7206\u6563|drop\n23 |\u661f\u964d\u308a       |ATTR:\u9b54 ATK:0.7 HIT:7                              |3|rare     |7\u9023\u661f\u5f3e|drop\n24 |\u5927\u9b54\u6cd5\u9663     |ATTR:\u9b54 ATK:4.5 HIT:2 EXCLUDE                      |4|epic     |\u9664\u5916:\u8907\u5408\u9b54\u6cd5\u9663|drop\n25 |\u53ec\u559a\u8853       |ATTR:\u9b54 ATK:2.0 HIT:4                              |3|rare     |\u7cbe\u970a4\u4f53\u53ec\u559a|drop\n26 |\u9b54\u529b\u53ce\u675f     |ATTR:\u9b54 ATK:1.0 HIT:2 TRIGGER:HIT:BUFF_ATK:25      |2|rare     |2\u9023+\u30d2\u30c3\u30c8ATKUP25%|drop\n27 |\u9b54\u6cd5\u9663\u5c55\u958b   |ATTR:\u9b54 BUFF_ATK:200 FAST EXCLUDE                   |2|legendary|\u5373\u653b\u9664\u5916:ATK+200%|drop\n28 |\u6b21\u5143\u65ac       |ATTR:\u9b54 ATK:7.0 HIT:1 EXCLUDE                      |5|legendary|\u9664\u5916:\u6b21\u5143\u3092\u65ac\u308b|drop\n29 |\u7981\u546a         |ATTR:\u9b54 ATK:8.0 HIT:1 CURSE_DMG:20                 |5|legendary|\u8d85\u9ad8\u706b\u529b+\u546a\u3044\u53cd\u52d5|drop\n30 |\u9b54\u529b\u306e\u5d50     |ATTR:\u9b54 ATK:1.5 HIT:6 STATUS:SILENCE:20:2          |4|epic     |6\u9023+\u6c88\u9ed9\u4ed8\u4e0e|drop\n31 |\u5c01\u5370\u8853       |ATTR:\u9b54 BUFF_ATK:300 FAST EXCLUDE                   |3|legendary|\u5373\u653b\u9664\u5916:ATK+300%|drop\n32 |\u9b54\u529b\u6ce2\u52d5     |ATTR:\u9b54 ATK:1.5 HIT:3 BUFF_ATK:50                  |3|epic     |3\u9023+ATK\u30d0\u30d550%|drop\n# \u2500\u2500 \u6bd2\u5c5e\u6027 \u2500\u2500\n33 |\u6bd2\u91dd         |ATTR:\u6bd2 ATK:0.6 HIT:1 STATUS:POISON:70:3           |1|common   |\u6bd2\u4ed8\u4e0e70%|drop\n34 |\u6bd2\u5d50         |ATTR:\u6bd2 ATK:0.5 HIT:5 STATUS:POISON:90:4           |3|epic     |5\u9023\u6bd2|drop\n35 |\u731b\u6bd2\u7259       |ATTR:\u6bd2 ATK:1.5 HIT:1 STATUS:POISON:100:4          |2|rare     |\u78ba\u5b9a\u6bd24t|drop\n36 |\u6bd2\u9727         |ATTR:\u6bd2 STATUS:POISON:100:3 FAST                    |1|rare     |\u5373\u653b:\u78ba\u5b9a\u6bd2(\u653b\u6483\u306a\u3057)|drop\n37 |\u731b\u6bd2\u6cbc       |ATTR:\u6bd2 ATK:0.8 HIT:1 STATUS:POISON:100:6          |2|rare     |\u78ba\u5b9a\u6bd26t|drop\n38 |\u6bd2\u86c7\u7259       |ATTR:\u6bd2 ATK:0.4 HIT:3 STATUS:POISON:80:3           |2|rare     |3\u9023\u6bd2|drop\n39 |\u6bd2\u7d20\u4ed8\u4e0e     |ATTR:\u6bd2 STATUS:POISON:100:5 BUFF_ATK:50 FAST        |2|epic     |\u5373\u653b:\u78ba\u5b9a\u6bd25t+ATK\u30d0\u30d5|drop\n40 |\u6bd2\u7206\u767a       |ATTR:\u6bd2 ATK:0.5 HIT:4 STATUS:POISON:100:3 BREAK:5  |4|epic     |4\u9023\u6bd2+\u30d6\u30ec\u30a4\u30af5\u500d|drop\n41 |\u731b\u6bd2\u7d50\u754c     |ATTR:\u6bd2 ATK:0.2 HIT:8 STATUS:POISON:100:5          |4|legendary|8\u9023\u78ba\u5b9a\u6bd25t|drop\n42 |\u6bd2\u817a\u7206\u7834     |ATTR:\u6bd2 ATK:0.3 HIT:10 STATUS:POISON:90:4 BREAK:6  |5|legendary|10\u9023\u6bd2+\u30d6\u30ec\u30a4\u30af6\u500d|drop\n43 |\u6bd2\u8150\u98df\u7834\u58ca   |ATTR:\u6bd2 ATK:0.5 HIT:5 STATUS:POISON:90:3 BREAK:5   |4|epic     |5\u9023\u6bd2+\u30d6\u30ec\u30a4\u30af5|drop\n44 |\u6bd2\u7b26         |ATTR:\u6bd2 ATK:1.0 HIT:1 STATUS:POISON:60:4 TRIGGER:HIT:BUFF_ATK:10|3|epic|\u6bd2+\u30d2\u30c3\u30c8ATKUP|drop\n# \u2500\u2500 \u708e\u5c5e\u6027 \u2500\u2500\n45 |\u70c8\u706b         |ATTR:\u708e ATK:1.5 HIT:1 STATUS:BURN:60:2             |2|rare     |\u71c3\u713c\u4ed8\u4e0e60%|drop\n46 |\u708e\u306e\u4e00\u6483     |ATTR:\u708e ATK:2.0 HIT:1 STATUS:BURN:80:2             |2|rare     |\u708e\u6483+\u71c3\u713c80%|drop\n47 |\u708e\u5d50         |ATTR:\u708e ATK:0.8 HIT:4 STATUS:BURN:70:2             |3|rare     |4\u9023\u708e+\u71c3\u713c|drop\n48 |\u696d\u706b         |ATTR:\u708e ATK:3.5 HIT:1 STATUS:BURN:90:3             |3|epic     |\u708e+\u71c3\u713c90%|drop\n49 |\u708e\u7b26         |ATTR:\u708e STATUS:BURN:100:4 BUFF_ATK:80 FAST          |2|epic     |\u5373\u653b:\u78ba\u5b9a\u71c3\u713c4t+ATK\u30d0\u30d5|drop\n50 |\u7206\u708e         |ATTR:\u708e ATK:2.5 HIT:2 STATUS:BURN:80:3             |3|epic     |2\u9023\u708e+\u71c3\u713c|drop\n51 |\u708e\u306e\u7adc\u7259     |ATTR:\u708e ATK:1.0 HIT:5 STATUS:BURN:60:2 BREAK:6     |4|epic     |5\u9023\u708e+\u30d6\u30ec\u30a4\u30af6\u500d|drop\n52 |\u8d85\u696d\u706b       |ATTR:\u708e ATK:6.0 HIT:1 STATUS:BURN:100:3 EXCLUDE     |5|legendary|\u9664\u5916:\u78ba\u5b9a\u71c3\u713c+\u8d85\u706b\u529b|drop\n53 |\u708e\u306e\u6e26       |ATTR:\u708e ATK:0.5 HIT:8 STATUS:BURN:50:2             |4|legendary|8\u9023\u708e\u306e\u6e26|drop\n54 |\u7126\u71b1\u5730\u7344     |ATTR:\u708e ATK:0.3 HIT:12 STATUS:BURN:80:3 BREAK:8    |5|legendary|12\u9023\u708e+\u30d6\u30ec\u30a4\u30af8\u500d|drop\n55 |\u7206\u708e\u9023\u5c04     |ATTR:\u708e ATK:1.2 HIT:3 STATUS:BURN:70:2             |3|epic     |3\u9023\u708e\u5f3e+\u71c3\u713c|drop\n56 |\u708e\u306e\u7cbe\u970a     |ATTR:\u708e ATK:2.0 HIT:1 BUFF_ATK:100 STATUS:BURN:70:2|4|epic    |\u708e+ATK2\u500d+\u71c3\u713c|drop\n# \u2500\u2500 \u6c37\u5c5e\u6027 \u2500\u2500\n57 |\u6c37\u67f1         |ATTR:\u6c37 ATK:1.5 HIT:1 STATUS:FREEZE:50:2           |2|rare     |\u6c37\u7d50\u4ed8\u4e0e50%|drop\n58 |\u5439\u96ea         |ATTR:\u6c37 ATK:0.7 HIT:4 STATUS:FREEZE:60:2           |2|rare     |4\u9023+\u6c37\u7d50|drop\n59 |\u6c37\u306e\u5203       |ATTR:\u6c37 ATK:2.0 HIT:1 STATUS:FREEZE:70:2           |2|rare     |\u6c37\u5203+\u6c37\u7d5070%|drop\n60 |\u6c37\u5d50         |ATTR:\u6c37 ATK:0.5 HIT:6 STATUS:FREEZE:80:3           |3|epic     |6\u9023\u6c37\u5d50+\u6c37\u7d50|drop\n61 |\u7d76\u5bfe\u96f6\u5ea6     |ATTR:\u6c37 ATK:5.0 HIT:1 STATUS:FREEZE:90:3 EXCLUDE    |4|epic     |\u9664\u5916:\u6c37\u7d5090%+\u5927\u30c0\u30e1|drop\n62 |\u6c37\u584a\u843d\u4e0b     |ATTR:\u6c37 ATK:3.5 HIT:1 STATUS:FREEZE:100:2          |3|epic     |\u78ba\u5b9a\u6c37\u7d50+\u5927\u30c0\u30e1|drop\n63 |\u4e07\u5e74\u6c37       |ATTR:\u6c37 ATK:1.0 HIT:5 STATUS:FREEZE:70:3 BREAK:5   |4|epic     |5\u9023\u6c37+\u30d6\u30ec\u30a4\u30af5|drop\n64 |\u6c37\u6cb3         |ATTR:\u6c37 ATK:0.3 HIT:10 STATUS:FREEZE:90:4          |5|legendary|10\u9023\u6c37+\u6c37\u7d5090%|drop\n65 |\u51cd\u7d50\u7b26       |ATTR:\u6c37 STATUS:FREEZE:100:3 BUFF_ATK:100 FAST        |2|epic     |\u5373\u653b:\u78ba\u5b9a\u6c37\u7d503t+ATK\u30d0\u30d5|drop\n66 |\u971c\u306e\u4e00\u6483     |ATTR:\u6c37 ATK:2.5 HIT:1 STATUS:FREEZE:80:2           |2|rare     |\u6c37\u6483+\u6c37\u7d5080%|drop\n67 |\u6c37\u306e\u5d50       |ATTR:\u6c37 ATK:0.6 HIT:8 STATUS:FREEZE:70:3 BREAK:6   |5|legendary|8\u9023\u6c37\u5d50+\u30d6\u30ec\u30a4\u30af6|drop\n# \u2500\u2500 \u5149\u5c5e\u6027 \u2500\u2500\n68 |\u56de\u5fa9\u8853       |ATTR:\u5149 HEAL:30 FAST                                |2|common   |\u5373\u653b:HP+30|drop\n69 |\u5927\u56de\u5fa9\u8853     |ATTR:\u5149 HEAL:80                                     |3|epic     |HP+80\u5927\u56de\u5fa9|drop\n70 |\u8056\u306a\u308b\u5149     |ATTR:\u5149 HEAL:50 BUFF_ATK:50 FAST                    |2|rare     |\u5373\u653b:HP+50+ATK\u30d0\u30d5|drop\n71 |\u30d2\u30fc\u30eb\u6ce2\u52d5   |ATTR:\u5149 HEAL:60 BUFF_ATK:50 FAST                    |3|epic     |\u5373\u653b:HP+60+ATK\u30d0\u30d5|drop\n72 |\u795e\u8056\u9b54\u6cd5     |ATTR:\u5149 ATK:2.0 HIT:1 HEAL:20                      |3|rare     |\u653b\u6483+HP20\u56de\u5fa9|drop\n73 |\u8056\u5263         |ATTR:\u5149 ATK:3.0 HIT:1 BUFF_ATK:100                 |3|epic     |\u5f37\u6483+ATK2\u500d\u30d0\u30d5|drop\n74 |\u5149\u306e\u5f3e\u5e55     |ATTR:\u5149 ATK:0.8 HIT:6 HEAL:20                      |4|epic     |6\u9023\u653b\u6483+HP\u56de\u5fa9|drop\n75 |\u6d44\u5316\u306e\u5149     |ATTR:\u5149 HEAL:100 BUFF_ATK:100 FAST                  |4|legendary|\u5373\u653b:HP+100+ATK2\u500d|drop\n76 |\u795e\u306e\u52a0\u8b77     |ATTR:\u5149 HEAL:200 FAST EXCLUDE                        |4|legendary|\u5373\u653b\u9664\u5916:HP+200|drop\n77 |\u8056\u5149\u6ce2       |ATTR:\u5149 ATK:1.5 HIT:3 HEAL:15                      |3|rare     |3\u9023\u653b\u6483+HP\u56de\u5fa9|drop\n78 |\u5149\u306e\u93a7       |ATTR:\u5149 BUFF_ATK:150 FAST                           |2|rare     |\u5373\u653b:ATK+150%(\u653b\u6483\u306a\u3057)|drop\n79 |\u795e\u8056\u7206\u767a     |ATTR:\u5149 ATK:5.0 HIT:1 HEAL:50 EXCLUDE               |5|legendary|\u9664\u5916:\u8d85\u5927\u6280+HP50\u56de\u5fa9|drop\n# \u2500\u2500 \u95c7\u5c5e\u6027 \u2500\u2500\n80 |\u95c7\u306e\u4e00\u6483     |ATTR:\u95c7 ATK:2.0 HIT:1 STATUS:WEAKEN:50:3           |2|rare     |\u5f31\u4f53\u5316\u4ed8\u4e0e50%|drop\n81 |\u30c9\u30ec\u30a4\u30f3     |ATTR:\u95c7 ATK:1.5 HIT:1 DRAIN:30                     |2|rare     |30%HP\u5438\u53ce|drop\n82 |\u95c7\u306e\u9023\u6253     |ATTR:\u95c7 ATK:0.8 HIT:4 STATUS:WEAKEN:40:2           |3|rare     |4\u9023+\u5f31\u4f53\u5316|drop\n83 |\u546a\u3044\u306e\u5203     |ATTR:\u95c7 ATK:1.8 HIT:1 STATUS:WEAKEN:60:3           |2|rare     |\u5f31\u4f53\u531660%3t|drop\n84 |\u6697\u9ed2\u9b54\u6cd5     |ATTR:\u95c7 ATK:3.0 HIT:1 STATUS:WEAKEN:70:3           |3|epic     |\u6697\u9ed2\u9b54\u6cd5+\u5f31\u4f53\u5316|drop\n85 |\u751f\u547d\u5438\u53ce     |ATTR:\u95c7 ATK:2.0 HIT:3 DRAIN:50                     |4|epic     |3\u902350%HP\u5438\u53ce|drop\n86 |\u546a\u7e1b\u7b26       |ATTR:\u95c7 STATUS:SILENCE:50:2 STATUS:WEAKEN:80:3 FAST  |2|epic     |\u5373\u653b:\u6c88\u9ed9+\u5f31\u4f53\u5316(\u653b\u6483\u306a\u3057)|drop\n87 |\u9b42\u5438\u53ce       |ATTR:\u95c7 ATK:1.0 HIT:5 DRAIN:40                     |4|epic     |5\u902340%HP\u5438\u53ce|drop\n88 |\u6b7b\u306e\u5ba3\u544a     |ATTR:\u95c7 ATK:6.0 HIT:1 CURSE_DMG:30                 |5|legendary|\u8d85\u706b\u529b+\u546a\u3044\u53cd\u52d530|drop\n89 |\u865a\u7121\u306e\u5203     |ATTR:\u95c7 ATK:4.0 HIT:2 STATUS:WEAKEN:90:4           |4|legendary|2\u9023\u8d85\u5f37\u6483+\u5f31\u4f53\u5316|drop\n90 |\u6697\u9ed2\u306e\u5d50     |ATTR:\u95c7 ATK:0.5 HIT:10 STATUS:WEAKEN:60:3 DRAIN:20  |5|legendary|10\u9023+\u5f31\u4f53\u5316+\u5438\u53ce|drop\n91 |\u546a\u3044\u306e\u9023\u9396   |ATTR:\u95c7 ATK:0.7 HIT:5 STATUS:WEAKEN:70:3 TRIGGER:HIT:BUFF_ATK:15|4|legendary|5\u9023\u5f31\u4f53\u5316+\u30d2\u30c3\u30c8ATKUP|drop\n# \u2500\u2500 \u970a\u5c5e\u6027/OP\u30b9\u30ad\u30eb \u2500\u2500\n92 |\u970a\u529b\u6ce2       |ATTR:\u970a ATK:1.5 HIT:1 TRIGGER:HIT:CHARGE_OP:5      |2|rare     |1\u6483+\u30d2\u30c3\u30c8\u3054\u3068OP+5|drop\n93 |\u970a\u529b\u7832       |ATTR:\u970a ATK:3.0 HIT:1 TRIGGER:HIT:CHARGE_OP:10     |3|epic     |\u5f37\u6483+\u30d2\u30c3\u30c8\u3054\u3068OP+10|drop\n94 |\u970a\u5f3e         |ATTR:\u970a ATK:0.8 HIT:4 TRIGGER:HIT:BUFF_ATK:10      |3|rare     |4\u9023+\u30d2\u30c3\u30c8ATKUP10%|drop\n95 |\u970a\u529b\u7206\u767a     |ATTR:\u970a ATK:4.0 HIT:1 TRIGGER:HIT:CHARGE_OP:20 EXCLUDE|4|epic|\u9664\u5916:\u5f37\u6483+\u30d2\u30c3\u30c8OP+20|drop\n96 |\u970a\u529b\u306e\u5d50     |ATTR:\u970a ATK:0.5 HIT:8 TRIGGER:HIT:BUFF_ATK:15      |4|epic     |8\u9023+\u30d2\u30c3\u30c8ATKUP15%|drop\n97 |\u970a\u529b\u30c1\u30e3\u30fc\u30b8 |ATTR:\u970a CHARGE_OP:30 BUFF_ATK:50 FAST               |1|rare     |\u5373\u653b:OP+30+ATK\u30d0\u30d5(\u653b\u6483\u306a\u3057)|drop\n98 |\u970a\u529b\u5927\u7832     |ATTR:\u970a ATK:5.0 HIT:1 CHARGE_OP:20                 |4|epic     |\u5f37\u6483+OP+20\u76f4\u63a5|drop\n99 |\u970a\u529b\u89e3\u653e     |ATTR:\u970a BUFF_ATK:200 CHARGE_OP:50 FAST EXCLUDE       |3|legendary|\u5373\u653b\u9664\u5916:ATK+200%+OP+50|drop\n100|\u970a\u529b\u6ce2\u52d5     |ATTR:\u970a ATK:1.2 HIT:5 TRIGGER:HIT:CHARGE_OP:5      |4|epic     |5\u9023+\u30d2\u30c3\u30c8OP+5|drop\n101|\u970a\u529b\u306e\u6975\u610f   |ATTR:\u970a ATK:2.0 HIT:3 BUFF_ATK:50 CHARGE_OP:15     |4|epic     |3\u9023+\u30d0\u30d5+OP15|drop\n102|\u970a\u529b\u7d50\u754c     |ATTR:\u970a BUFF_ATK:200 TRIGGER:HIT:CHARGE_OP:30 FAST EXCLUDE|4|legendary|\u5373\u653b\u9664\u5916:\u8d85\u5f37\u5316+OP\u7a3c\u304e|drop\n# \u2500\u2500 \u7279\u6b8a \u2500\u2500\n103|\u7d50\u754c\u7815\u304d     |ATTR:\u7279 ATK:3.0 HIT:1 BREAK:7                      |4|epic     |\u72b6\u614b\u7570\u5e38\u306e\u6575\u306b7\u500d\u30d6\u30ec\u30a4\u30af|drop\n104|\u9b54\u7832         |ATTR:\u7279 ATK:5.0 HIT:1 BREAK:10 EXCLUDE              |5|legendary|\u9664\u5916:10\u500d\u30d6\u30ec\u30a4\u30af|drop\n105|\u708e\u7206\u7815       |ATTR:\u7279 ATK:1.0 HIT:3 STATUS:BURN:80:2 BREAK:6     |4|epic     |3\u9023\u708e\u4ed8\u4e0e+\u30d6\u30ec\u30a4\u30af6|drop\n106|\u6c37\u7815\u304d       |ATTR:\u7279 ATK:2.0 HIT:2 STATUS:FREEZE:70:2 BREAK:5   |3|epic     |2\u9023\u6c37\u4ed8\u4e0e+\u30d6\u30ec\u30a4\u30af5|drop\n107|\u5168\u529b\u4e00\u6483     |ATTR:\u7279 ATK:10.0 HIT:1 CURSE_DMG:50                 |5|legendary|\u8d85\u9ad8\u706b\u529b+\u546a\u3044\u53cd\u52d550|drop\n108|\u9023\u9396\u7206\u767a     |ATTR:\u7279 ATK:1.5 HIT:5 TRIGGER:HIT:BUFF_ATK:20 BREAK:4|5|legendary|5\u9023+\u30d0\u30d5+\u30d6\u30ec\u30a4\u30af4|drop\n109|\u9b3c\u795e\u306e\u4e00\u6483   |ATTR:\u7279 ATK:8.0 HIT:1 EXCLUDE                       |5|legendary|\u9664\u5916:\u9b3c\u795e\u306e\u8d85\u4e00\u6483|drop\n110|\u6700\u5f8c\u306e\u4e00\u6483   |ATTR:\u7279 ATK:15.0 HIT:1 CURSE_DMG:100 EXCLUDE        |5|legendary|\u9664\u5916:\u6700\u5927\u706b\u529b+\u53cd\u52d5100|drop\n111|\u4e71\u6253\u9023\u6483     |ATTR:\u7279 ATK:0.4 HIT:12 TRIGGER:HIT:BUFF_ATK:10     |5|legendary|12\u9023+\u30d2\u30c3\u30c8ATKUP10%|drop\n112|\u30d0\u30d5\u9023\u6483     |ATTR:\u7279 BUFF_ATK:100 ATK:0.8 HIT:3                  |3|epic     |ATK+100%\u5f8c3\u9023\u6483|drop\n113|\u9f13\u821e         |ATTR:\u7279 BUFF_ATK:200 FAST EXCLUDE                    |2|legendary|\u5373\u653b\u9664\u5916:ATK+200%\u8d85\u30d0\u30d5|drop\n114|\u6bd2\u708e\u8907\u5408     |ATTR:\u7279 ATK:0.5 HIT:5 STATUS:POISON:80:3 STATUS:BURN:60:2|4|epic|5\u9023\u6bd2\u708e\u8907\u5408|drop\n115|\u6c37\u6bd2\u8907\u5408     |ATTR:\u7279 ATK:0.5 HIT:4 STATUS:FREEZE:70:2 STATUS:POISON:70:3|4|epic|4\u9023\u6c37\u6bd2\u8907\u5408|drop\n# \u2500\u2500 \u30b7\u30e7\u30c3\u30d7\u9650\u5b9a \u2500\u2500\n116|\u5546\u4eba\u306e\u525b\u5263   |ATTR:\u65ac ATK:6.0 HIT:1                              |4|epic     |\u30b7\u30e7\u30c3\u30d7\u9650\u5b9a\u3002\u5b89\u5b9a\u3057\u305f\u9ad8\u706b\u529b|shop\n117|\u5c02\u58f2\u7279\u8a31\u306e\u76fe |ATTR:\u5149 BUFF_ATK:120 HEAL:40 FAST                   |3|epic     |\u30b7\u30e7\u30c3\u30d7\u9650\u5b9a\u3002\u30d0\u30d5+\u56de\u5fa9|shop\n118|\u9650\u5b9a\u751f\u7523\u300c\u7834\u6ec5\u306e\u69cd\u300d|ATTR:\u95c7 ATK:9.0 HIT:1 DRAIN:30              |5|legendary|\u30b7\u30e7\u30c3\u30d7\u9650\u5b9a\u3002\u8d85\u9ad8\u706b\u529b+\u751f\u547d\u5438\u53ce|shop\n119|\u970a\u529b\u306e\u79d8\u85ac   |ATTR:\u970a CHARGE_OP:60 BUFF_ATK:80 FAST EXCLUDE        |3|legendary|\u30b7\u30e7\u30c3\u30d7\u9650\u5b9a\u9664\u5916:OP+60+ATK\u30d0\u30d5|shop\n# \u2500\u2500 \u6575\u30c9\u30ed\u30c3\u30d7\u9650\u5b9a \u2500\u2500\n120|\u30b4\u30d6\u30ea\u30f3\u306e\u79d8\u4f1d\u62f3|ATTR:\u65ac ATK:2.5 HIT:2 TRIGGER:HIT:BUFF_ATK:20  |3|epic     |\u30c9\u30ed\u30c3\u30d7\u9650\u5b9a|edrop\n121|\u7adc\u306e\u9006\u9c57     |ATTR:\u708e ATK:7.0 HIT:1 STATUS:BURN:100:4 BREAK:8    |5|legendary|\u30c9\u30ed\u30c3\u30d7\u9650\u5b9a\u3002\u30c9\u30e9\u30b4\u30f3\u306e\u5965\u7fa9|edrop\n122|\u6b7b\u970a\u306e\u546a\u8a5b   |ATTR:\u95c7 ATK:0.4 HIT:8 STATUS:WEAKEN:90:4 DRAIN:35  |5|legendary|\u30c9\u30ed\u30c3\u30d7\u9650\u5b9a\u3002\u30cd\u30af\u30ed\u30de\u30f3\u30b5\u30fc\u306e\u79d8\u8853|edrop\n123|\u9b54\u738b\u306e\u90aa\u773c   |ATTR:\u9b54 ATK:0.6 HIT:6 BREAK:12 STATUS:WEAKEN:80:3  |5|legendary|\u30c9\u30ed\u30c3\u30d7\u9650\u5b9a\u3002\u9b54\u738b\u306e\u90aa\u773c|edrop\n# \u2500\u2500 Mystic\u30b9\u30ad\u30eb(\u30dc\u30b9\u9650\u5b9a) \u2500\u2500\n124|\u3010\u795e\u696d\u3011\u5929\u5730\u5275\u9020      |ATTR:\u7279 ATK:12.0 HIT:1 BUFF_ATK:100 EXCLUDE  |5|mystic|\u30dc\u30b9\u9650\u5b9a\u3002\u795e\u8a71\u7d1a\u306e\u4e00\u6483|boss\n125|\u3010\u795e\u696d\u3011\u865a\u7121\u306e\u7d42\u7109    |ATTR:\u95c7 ATK:0.8 HIT:10 BREAK:20 EXCLUDE      |5|mystic|\u30dc\u30b9\u9650\u5b9a\u3002\u5168\u3066\u3092\u7121\u306b\u5e30\u3059|boss\n126|\u3010\u795e\u696d\u3011\u5b87\u5b99\u306e\u771f\u7406    |ATTR:\u970a ATK:5.0 HIT:3 TRIGGER:HIT:CHARGE_OP:30 BUFF_ATK:150|5|mystic|\u30dc\u30b9\u9650\u5b9a|boss\n127|\u3010\u795e\u696d\u3011\u58ca\u308c\u305f\u61d0\u4e2d\u6642\u8a08|ATTR:\u7279 BUFF_ATK:500 FAST EXCLUDE STATUS:SURE:100:1|0|mystic|\u5373\u653b\u9664\u5916SP0:ATK+500%+\u6b21\u306e\u653b\u6483\u5fc5\u4e2d+\u72b6\u614b\u7570\u5e38\u89e3\u9664|boss\n128|\u3010\u795e\u696d\u3011\u970a\u7b26\u300c\u5922\u60f3\u5929\u751f\u300d|ATTR:\u970a ATK:3.0 HIT:5 TRIGGER:HIT:CHARGE_OP:20 TRIGGER:HIT:BUFF_ATK:20|5|mystic|\u30dc\u30b9\u9650\u5b9a\u3002\u8907\u5408\u30c8\u30ea\u30ac\u30fc|boss\n129|\u3010\u795e\u696d\u3011\u708e\u7b26\u300c\u5730\u7344\u306e\u696d\u706b\u300d|ATTR:\u708e ATK:2.0 HIT:6 STATUS:BURN:100:5 BREAK:15 EXCLUDE|5|mystic|\u9664\u5916:6\u9023\u78ba\u5b9a\u71c3\u713c+\u30d6\u30ec\u30a4\u30af15\u500d|boss\n130|\u3010\u795e\u696d\u3011\u51ac\u7b26\u300c\u30c0\u30a4\u30e4\u30e2\u30f3\u30c9\u30d6\u30ea\u30b6\u30fc\u30c9\u300d|ATTR:\u6c37 ATK:0.8 HIT:15 STATUS:FREEZE:90:4 BREAK:8|5|mystic|15\u9023\u6c37\u7d50+\u30d6\u30ec\u30a4\u30af8\u500d|boss\n# \u2500\u2500 \u30e6\u30fc\u30c6\u30a3\u30ea\u30c6\u30a3 \u2500\u2500\n131|\u732e\u8eab\u306e\u4e00\u6483     |ATTR:\u7279 EXCLUDE RESTORE_SP:4                      |0|rare     |\u3053\u306e\u30ab\u30fc\u30c9\u3092\u9664\u5916\u3057\u3066SP+4\u3092\u5f97\u308b\uff08\u653b\u6483\u306a\u3057\uff09|drop\n132|\u6b8b\u5149\u306e\u56de\u60f3     |ATTR:\u7279 RECYCLE:1 FAST                            |1|rare     |\u6368\u3066\u672d\u304b\u30891\u679a\u3092\u9078\u3093\u3067\u624b\u672d\u306b\u623b\u3059\uff08\u5373\u653b\uff09|drop\n# \u2500\u2500 \u9632\u5fa1\u30b9\u30ad\u30eb\uff08\u30ef\u30f3\u30d1\u30f3\u5bfe\u7b56\uff09 \u2500\u2500\n133|\u5b88\u308a\u306e\u69cb\u3048     |ATTR:\u7279 DMG_CUT:50:2 FAST                          |2|rare     |2\u30bf\u30fc\u30f3\u306e\u9593\u3001\u88ab\u30c0\u30e1\u30fc\u30b8-50%\uff08\u5373\u653b\uff09|drop\n134|\u5b88\u8b77\u306e\u76fe       |ATTR:\u7279 SHIELD:80 FAST                             |2|rare     |HP80\u5206\u306e\u30d0\u30ea\u30a2\u3092\u5c55\u958b\uff08\u5373\u653b\uff09|drop\n135|\u5b8c\u5168\u9632\u58c1       |ATTR:\u7279 GUARD:1 FAST                               |3|epic     |\u6b21\u306e\u88ab\u5f3e\u3092\u5b8c\u5168\u306b\u7121\u52b9\u5316\uff08\u5373\u653b\uff09|drop\n# \u2500\u2500 \u30c9\u30ed\u30fc\u5c02\u7528\uff08FAST\u306e\u81ea\u52d5\u30c9\u30ed\u30fc\u3092\u7f6e\u304d\u63db\u3048\uff09 \u2500\u2500\n136|\u8ffd\u52a0\u601d\u8003       |ATTR:\u7279 DRAW:2 FAST                                |1|rare     |\u30ab\u30fc\u30c9\u30922\u679a\u30c9\u30ed\u30fc\uff08\u5373\u653b\uff09|drop\n137|\u9583\u304d\u306e\u4e00\u77ac     |ATTR:\u7279 DRAW:1 RESTORE_SP:1 FAST                   |0|rare     |\u30ab\u30fc\u30c9\u30921\u679a\u30c9\u30ed\u30fc&SP+1\uff08\u5373\u653b\uff09|drop\n\n[PASSIVE]\n# id|name|effects|rarity|desc\np1  |\u6226\u58eb\u306e\u6c17\u6982     |BUFF_ATK_PERM:10       |common   |ATK\u6c38\u7d9a+10%\np2  |\u9b54\u529b\u5faa\u74b0       |REGEN_SP:1             |common   |\u30bf\u30fc\u30f3\u958b\u59cbSP+1\np3  |\u92fc\u306e\u610f\u5fd7       |MAX_HP:20              |common   |\u6700\u5927HP+20\np4  |\u56de\u5fa9\u306e\u52a0\u8b77     |HEAL_BOOST:20          |common   |\u56de\u5fa9\u52b9\u679c+20%\np5  |\u9023\u6483\u306e\u624d       |BUFF_ATK_PERM:25       |rare     |ATK\u6c38\u7d9a+25%\np6  |OP\u5897\u5e45         |OP_BOOST:30            |rare     |OP\u7372\u5f97\u91cf+30%\np7  |\u9b54\u529b\u5727\u7e2e       |REGEN_SP:2             |epic     |\u30bf\u30fc\u30f3\u958b\u59cbSP+2\np8  |\u8987\u738b\u306e\u8840       |BUFF_ATK_PERM:50       |epic     |ATK\u6c38\u7d9a+50%\np9  |\u4e0d\u6b7b\u8eab         |TOUGH                  |legendary|HP30%\u4ee5\u4e0b\u3067\u88ab\u30c0\u30e1\u534a\u6e1b\np10 |OP\u53ce\u96c6\u5bb6       |OP_BOOST:50            |epic     |OP\u7372\u5f97\u91cf+50%\np11 |\u30d2\u30c3\u30c8\u3054\u3068\u306b\u95d8\u5fd7|TRIG_HIT_ATK:10       |epic     |\u653b\u6483\u30d2\u30c3\u30c8\u3054\u3068ATK\u00d7+10%\uff08\u6226\u95d8\u5185\uff09\np12 |\u80cc\u6c34\u306e\u95d8\u5fd7     |TRIG_RCV_ATK:50        |epic     |\u88ab\u30c0\u30e1\u306e\u305f\u3073ATK\u6c38\u7d9a\u5897\u52a0\np13 |\u96c6\u4e2d\u306e\u5883\u5730     |TRIG_TURN_CRIT:20      |rare     |\u6bce\u30bf\u30fc\u30f3\u958b\u59cb\u30af\u30ea\u30c3\u30c8\u7387+20%\np14 |\u5e78\u904b\u306e\u624b       |DRAW_PLUS:1            |rare     |\u6bce\u30bf\u30fc\u30f31\u679a\u4f59\u5206\u306b\u30c9\u30ed\u30fc\np15 |\u6bd2\u306e\u89aa\u548c       |TRIG_HIT_ATK:5         |rare     |\u653b\u6483\u30d2\u30c3\u30c8\u3054\u3068ATK+5%\np16 |\u708e\u306e\u52a0\u8b77       |OP_BOOST:20 BUFF_ATK_PERM:15|rare |OP+20%&ATK\u6c38\u7d9a+15%\np17 |\u6c37\u306e\u9632\u8b77       |MAX_HP:50              |rare     |\u6700\u5927HP+50\np18 |\u95c7\u306e\u529b         |TRIG_RCV_ATK:30        |rare     |\u88ab\u30c0\u30e1ATK\u6c38\u7d9a\u5897\u52a0\np19 |\u970a\u529b\u306e\u6e90       |REGEN_SP:1 OP_BOOST:20 |epic     |\u6bce\u30bf\u30fc\u30f3SP+1&OP+20%\np20 |\u795e\u306e\u52a0\u8b77       |MAX_HP:100 BUFF_ATK_PERM:30|epic  |HP+100&ATK\u6c38\u7d9a+30%\np21 |\u8987\u738b\u306e\u9053       |BUFF_ATK_PERM:80       |legendary|ATK\u6c38\u7d9a+80%\np22 |\u7121\u9650\u306e\u9b54\u529b     |REGEN_SP:3             |legendary|\u6bce\u30bf\u30fc\u30f3SP+3\np23 |\u795e\u8056\u306a\u76fe       |TOUGH                  |epic     |HP30%\u4ee5\u4e0b\u3067\u88ab\u30c0\u30e1\u534a\u6e1b\np24 |\u9023\u9396\u306e\u624d\u80fd     |TRIG_HIT_ATK:15        |legendary|\u30d2\u30c3\u30c8\u3054\u3068ATK+15%\uff08\u6226\u95d8\u5185\uff09\np25 |\u5b87\u5b99\u306e\u7406       |OP_BOOST:80 BUFF_ATK_PERM:50|legendary|OP+80%&ATK\u6c38\u7d9a+50%\np26 |\u30c9\u30ed\u30fc\u5f37\u5316     |DRAW_PLUS:2            |epic     |\u6bce\u30bf\u30fc\u30f32\u679a\u4f59\u5206\u306b\u30c9\u30ed\u30fc\np27 |\u3010\u795e\u8a71P\u3011\u7adc\u8108\u306e\u5deb\u5973|TRIG_HIT_ATK:20      |mystic   |\u653b\u6483\u30d2\u30c3\u30c8\u3054\u3068ATK+20%\uff08\u6226\u95d8\u5185\uff09\np28 |\u3010\u795e\u8a71P\u3011\u7791\u60f3\u306e\u5883\u5730|OP_BOOST:60          |mystic   |OP\u7372\u5f97\u91cf+60%\np29 |\u3010\u795e\u8a71P\u3011\u4e0d\u6ec5\u306e\u9b42  |MAX_HP:200 BUFF_ATK_PERM:40|mystic|HP+200&ATK\u6c38\u7d9a+40%\np30 |\u3010\u795e\u8a71P\u3011\u30ec\u30fc\u30f4\u30a1\u30c6\u30a4\u30f3(\u9752)|ATKMUL:3.0 DMGMUL:1.5|mystic|\u5168\u653b\u6483\u529b\u00d73\u500d\u3001\u88ab\u30c0\u30e1\u00d71.5\u500d\np31 |\u3010\u795e\u8a71P\u3011\u30ea\u30b5\u30a4\u30af\u30eb|EXCL_RETURN:50     |mystic   |\u9664\u5916\u30ab\u30fc\u30c950%\u3067\u624b\u672d\u306b\u623b\u308aSP0\n\n[ENEMY]\n# name|hp|atk|opG|cp|spell|sMult|deck_type|actions\n\u30b4\u30d6\u30ea\u30f3       |60  |12 |15|8 |\u30b4\u30d6\u30ea\u30f3\u62f3         |2.5|slash  |1\n\u30b9\u30e9\u30a4\u30e0       |80  |8  |18|10|\u6eb6\u89e3\u6db2             |2.0|poison |1\n\u30b9\u30b1\u30eb\u30c8\u30f3     |100 |15 |20|12|\u9ab8\u9aa8\u306e\u4e00\u6483         |2.8|slash  |1\n\u9b54\u6cd5\u4f7f\u3044       |70  |20 |22|14|\u7d2b\u96fb\u4e00\u9583           |3.2|magic  |1\n\u6bd2\u86c7           |90  |14 |20|13|\u731b\u6bd2\u306e\u7259           |2.6|poison |1\n\u708e\u306e\u7cbe\u970a       |110 |18 |25|16|\u696d\u706b\u306e\u606f\u5439         |3.0|fire   |1\n\u6c37\u306e\u7cbe\u970a       |120 |16 |23|15|\u5439\u96ea\u5d50             |2.8|ice    |1\n\u30c9\u30ec\u30a4\u30f3\u8759\u8760   |95  |17 |22|14|\u751f\u547d\u5438\u53ce           |2.7|drain  |1\n\u95c7\u306e\u9a0e\u58eb       |150 |22 |25|18|\u865a\u7121\u306e\u4e00\u6483         |3.3|dark   |1\n\u30c9\u30e9\u30b4\u30f3       |200 |30 |30|30|\u7adc\u708e\u30d6\u30ec\u30b9\u30b9\u30c8\u30fc\u30e0 |4.0|fire   |1\n\u30cd\u30af\u30ed\u30de\u30f3\u30b5\u30fc |150 |25 |25|20|\u6028\u970a \u9ed2\u306e\u5f7c\u5cb8\u82b1    |3.5|magic  |1\n\u92fc\u306e\u9a0e\u58eb       |220 |28 |28|25|\u9244\u58c1\u306e\u4e00\u6483         |3.7|slash  |1\n\u5815\u5929\u4f7f         |280 |35 |30|35|\u8056\u5263\u306e\u4e00\u6483         |4.2|mixed  |1\n\u9b54\u738b           |350 |42 |35|60|\u6697\u9ed2\u306e\u7d42\u7109         |5.0|boss   |2\n\n[ENEMY_DECK]\n# style|skill_ids_available\nslash  |1,2,3,4,5,7,9,10,120\npoison |33,35,36,37,38,34\nfire   |45,46,47,48,50,55,121\nmagic  |18,19,20,22,23,25,26\nice    |57,58,59,60,62,66\ndark   |80,81,82,83,84,86,122\ndrain  |81,85,87,81,87,80\nmixed  |1,18,33,45,57,80,92\nboss   |9,10,11,13,24,28,31,61,95,99,104,109,121,122,123\n\n[INITIAL_DECK]\n# id|name|skill_ids|item_ids|relic_id|passive_id|unlock_floor|icon|desc\nbasic   |\u521d\u671f\u30c7\u30c3\u30ad    |1,2,2,5,68     |||    |0 |\u2694|\u653b\u6483\u30fb\u9023\u6483\u30fb\u30d0\u30d5\u306e\u30d0\u30e9\u30f3\u30b9\u578b\nslash   |\u5263\u58eb\u30c7\u30c3\u30ad    |3,4,5,7,9      |||    |5 |\ud83d\udde1|\u65ac\u6483\u7279\u5316\u306e\u9ad8\u706b\u529b\u578b\npoison  |\u6bd2\u5e2b\u30c7\u30c3\u30ad    |33,35,36,40,68 |||    |10|\u2620|\u6bd2\u91cd\u306d\u30d6\u30ec\u30a4\u30af\u30b3\u30f3\u30dc\nfire    |\u708e\u4f7f\u3044\u30c7\u30c3\u30ad  |45,47,49,51,68 |||    |15|\ud83d\udd25|\u71c3\u713c\u84c4\u7a4d\u304b\u3089\u708e\u30d6\u30ec\u30a4\u30af\nmagic   |\u9b54\u6cd5\u4f7f\u3044\u30c7\u30c3\u30ad|18,21,26,97,78 |||    |20|\u2728|\u9b54\u6cd5\u30b3\u30f3\u30dc&\u30c8\u30ea\u30ac\u30fc\nspeed   |\u901f\u653b\u30c7\u30c3\u30ad    |7,11,65,70,97  |||    |25|\u26a1|FAST\u30ab\u30fc\u30c9\u9023\u9396\u30b3\u30f3\u30dc\n# \u30ad\u30e3\u30e9\u30af\u30bf\u30fc\u30c7\u30c3\u30ad\nreimu   |\u970a\u5922\u30c7\u30c3\u30ad    |97,70,40,12,77 |ofuda,ofuda||p6|30|\u26e9|\u970a\u5922\u3002\u304a\u672d(\u5fc5\u4e2d\u30c0\u30e1)2\u679a+OP\u91cd\u8996\nmarisa  |\u9b54\u7406\u6c99\u30c7\u30c3\u30ad  |22,55,52,49,32 |||p16|35|\u2b50|\u9b54\u7406\u6c99\u3002\u9b54\u5c5e\u6027\u30c0\u30e1+\u30d1\u30c3\u30b7\u30d6\u4ed8\u304d\nflandre |\u30d5\u30e9\u30f3\u30c7\u30c3\u30ad  |56,49,40,51,67 |||p13|40|\ud83d\udd2e|\u30d5\u30e9\u30f3\u3002\u708eBREAK\u30b3\u30f3\u30dc\u7279\u5316\n\n[RELIC]\n# id|name|effect_tag|rarity|desc\ntengu_fan   |\u5929\u72d7\u306e\u56e3\u6247      |BATTLE_START_DRAW:2    |rare     |\u30d0\u30c8\u30eb\u958b\u59cb\u6642\u521d\u30bf\u30fc\u30f3\u306e\u307f\u30c9\u30ed\u30fc+2\ncharm       |\u8eab\u4ee3\u308f\u308a\u306e\u5fa1\u5b88  |REVIVE_ONCE:1          |epic     |HP0\u306b\u306a\u3063\u305f\u3068\u304d1\u5ea6\u3060\u3051HP1\u3067\u8010\u3048\u308b\uff08\u58ca\u308c\u308b\uff09\nstrange_pot |\u602a\u3057\u3044\u58fa        |SHOP_DISCOUNT:20       |rare     |\u30b7\u30e7\u30c3\u30d7\u4fa1\u683c20%\u5f15\u304d\nwitch_hat   |\u9b54\u6cd5\u4f7f\u3044\u306e\u5e3d\u5b50  |SP_COST_DOWN:1         |mystic   |\u5168\u30b9\u30ad\u30ebSP\u6d88\u8cbb-1\uff08\u6700\u4f4e0\uff09\nsages_stone |\u8ce2\u8005\u306e\u77f3        |OP_HALF:1              |mystic   |\u30b9\u30da\u30abOP\u6d88\u8cbb\u534a\u5206\nlevatein_r  |\u30ec\u30fc\u30f4\u30a1\u30c6\u30a4\u30f3(\u8d64)|ATK_MUL:2.0          |mystic   |\u5168\u653b\u6483\u529b\u00d72\u500d\nlevatein_b  |\u30ec\u30fc\u30f4\u30a1\u30c6\u30a4\u30f3(\u9752)|ATK_MUL:3.0 RECV_MUL:1.5|mystic|\u5168\u653b\u6483\u00d73\u500d\u3001\u88ab\u30c0\u30e1\u00d71.5\u500d\nrecycle_box |\u30ea\u30b5\u30a4\u30af\u30eb\u30dc\u30c3\u30af\u30b9|EXCL_RETURN:50       |legendary|\u9664\u5916\u30ab\u30fc\u30c950%\u3067\u624b\u672d\u306b\u623b\u308aSP0\nhourglass   |\u7802\u6642\u8a08         |REGEN_SP:1 OP_BOOST:10  |rare     |\u6bce\u30bf\u30fc\u30f3SP+1&OP\u7372\u5f97+10%\nsp_collector|SP\u53ce\u96c6\u88c5\u7f6e     |TEMP_SP_REGEN:2:3       |epic     |\u4f7f\u7528:3\u30bf\u30fc\u30f3\u6bce\u30bf\u30fc\u30f3SP+2\nred_mushroom|\u602a\u3057\u3044\u30ad\u30ce\u30b3   |EVENT_ONLY:1            |special  |\u7279\u6b8a\u30a4\u30d9\u30f3\u30c8\u5c02\u7528\uff08\u898b\u3089\u308c\u306a\u3044\uff09\n\n[ITEM]\n# id|name|tags|cost|type|rarity|desc|battle_use\npot_s  |\u30dd\u30fc\u30b7\u30e7\u30f3(S)   |HEAL:30          |10 |heal    |common   |HP+30\u56de\u5fa9|1\npot_m  |\u30dd\u30fc\u30b7\u30e7\u30f3(M)   |HEAL:50          |16 |heal    |common   |HP+50\u56de\u5fa9|1\npot_l  |\u30dd\u30fc\u30b7\u30e7\u30f3(L)   |HEAL:70          |22 |heal    |rare     |HP+70\u56de\u5fa9|1\npot_xl |\u30dd\u30fc\u30b7\u30e7\u30f3(XL)  |HEAL:150         |45 |heal    |epic     |HP+150\u56de\u5fa9|1\neth_s  |\u30a8\u30fc\u30c6\u30eb(S)     |RESTORE_SP:2     |12 |sp      |common   |SP+2\u56de\u5fa9|1\neth_l  |\u30a8\u30fc\u30c6\u30eb(L)     |RESTORE_SP:5     |25 |sp      |rare     |SP+5\u56de\u5fa9|1\nop_fil |\u30aa\u30fc\u30d0\u30fc\u30a8\u30ca\u30b8\u30fc |RESTORE_OP:50    |40 |op      |epic     |OP+50\u30c1\u30e3\u30fc\u30b8|1\nop_max |\u30d1\u30fc\u30d5\u30a7\u30af\u30c8\u30b3\u30a2 |RESTORE_OP:100   |90 |op      |legendary|OP\u5168\u5feb|1\nsp_col |SP\u53ce\u96c6          |TEMP_SP_REGEN:2:3|35 |buff    |epic     |3\u30bf\u30fc\u30f3\u6bce\u30bf\u30fc\u30f3SP+2|1\ncore   |\u9650\u754c\u7a81\u7834\u30b3\u30a2    |PASSIVE_SLOT:1   |60 |core    |legendary|\u30d1\u30c3\u30b7\u30d6\u67a0+1|0\nbomb_s |\u624b\u69b4\u5f3e          |BOMB:0.5         |18 |atk     |common   |\u30d5\u30ed\u30a2\u00d70.5\u306e\u78ba\u5b9a\u30c0\u30e1\u30fc\u30b8\uff08\u5fc5\u4e2d\uff09|1\nbomb_m |\u7206\u5f3e            |BOMB:1.0         |35 |atk     |rare     |\u30d5\u30ed\u30a2\u00d71.0\u306e\u78ba\u5b9a\u30c0\u30e1\u30fc\u30b8\uff08\u5fc5\u4e2d\uff09|1\nbomb_l |\u5927\u7206\u5f3e          |BOMB:2.0         |70 |atk     |epic     |\u30d5\u30ed\u30a2\u00d72.0\u306e\u78ba\u5b9a\u30c0\u30e1\u30fc\u30b8\uff08\u5fc5\u4e2d\uff09|1\nbomb_xl|\u8d77\u7206\u7b26\u300c\u65ad\u754c\u7206\u5f3e\u300d|BOMB:4.0       |150|atk     |legendary|\u30d5\u30ed\u30a2\u00d74.0\u306e\u78ba\u5b9a\u30c0\u30e1\u30fc\u30b8\uff08\u5fc5\u4e2d\uff09|1\nofuda  |\u304a\u672d            |BOMB:1.5         |0  |atk     |rare     |\u30d5\u30ed\u30a2\u00d71.5\u306e\u78ba\u5b9a\u30c0\u30e1\u30fc\u30b8\uff08\u5fc5\u4e2d\u30fb\u970a\u5922\u5c02\u7528\uff09|1\nmat_poison|\u6bd2\u306e\u80de\u5b50     |STATUS:POISON:70:3|20|material|common   |\u5408\u6210\u5c02\u7528\u3002\u6bd2\u4ed8\u4e0e\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_burn  |\u71c3\u713c\u306e\u7a2e\u706b   |STATUS:BURN:60:2 |22 |material|common   |\u5408\u6210\u5c02\u7528\u3002\u71c3\u713c\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_freeze|\u6c37\u7d50\u306e\u6b20\u7247   |STATUS:FREEZE:60:2|24|material|rare     |\u5408\u6210\u5c02\u7528\u3002\u6c37\u7d50\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_break |\u7834\u7815\u306e\u7d50\u6676   |BREAK:6          |35 |material|rare     |\u5408\u6210\u5c02\u7528\u3002\u30d6\u30ec\u30a4\u30af\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_buff  |\u95d8\u6c17\u306e\u5b9d\u73e0   |BUFF_ATK:40      |28 |material|rare     |\u5408\u6210\u5c02\u7528\u3002ATK\u30d0\u30d5\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_drain |\u751f\u547d\u306e\u96eb     |DRAIN:25         |30 |material|epic     |\u5408\u6210\u5c02\u7528\u3002\u751f\u547d\u5438\u53ce\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_fast  |\u75be\u98a8\u306e\u7fbd\u6839   |FAST             |40 |material|epic     |\u5408\u6210\u5c02\u7528\u3002\u5373\u653b(FAST)\u3092\u8ffd\u52a0|0\nmat_excl  |\u5c01\u5370\u306e\u9396     |EXCLUDE          |45 |material|epic     |\u5408\u6210\u5c02\u7528\u3002\u9664\u5916(EXCLUDE)\u3092\u8ffd\u52a0|0\nmat_trigger|\u9023\u9396\u306e\u6838   |TRIGGER:HIT:BUFF_ATK:15|50|material|legendary|\u5408\u6210\u5c02\u7528\u3002\u30d2\u30c3\u30c8\u6642ATK\u30d0\u30d5\u30c8\u30ea\u30ac\u30fc\u3092\u8ffd\u52a0|0\n\n[SPELLCARD]\n# id|name|type|power|buff|hits|perAil|rarity|desc|source\nsc0|\u5f3e\u7b26\u300c\u5f3e\u5e55\u30d0\u30ec\u30c3\u30c8\u300d|SINGLE|10|0|1|0|common|\u5358\u4f5310\u500d|drop\nsc1|\u6563\u7b26\u300c\u62e1\u6563\u5f3e\u5e55\u300d|MULTI|6|0|3|0|common|3\u90236\u500d|drop\nsc2|\u6c17\u7b26\u300c\u899a\u9192\u89e3\u653e\u300d|SELFBUFF|5|100|1|0|common|ATK+100%\u5f8c5\u500d|drop\nsc3|\u96f7\u7b26\u300c\u96fb\u5149\u77f3\u706b\u300d|SINGLE|14|0|1|0|rare|\u5358\u4f5314\u500d\u306e\u96f7\u6483|drop\nsc4|\u6c37\u7b26\u300c\u30b3\u30fc\u30eb\u30c9\u30d6\u30e9\u30b9\u30c8\u300d|MULTI|5|0|5|0|rare|5\u90235\u500d|drop\nsc5|\u708e\u7b26\u300c\u30d5\u30ec\u30a4\u30e0\u30d0\u30fc\u30b9\u30c8\u300d|SELFBUFF|7|80|1|0|rare|ATK+80%\u5f8c7\u500d|drop\nsc_e1|\u5947\u8de1\u300c\u30b9\u30bf\u30fc\u30c0\u30b9\u30c8\u30ec\u30f4\u30a1\u30ea\u30a8\u300d|SELFBUFF|10|100|1|0|epic|ATK+100%(3t)\u5f8c10\u500d|drop\nsc_e2|\u6bd2\u7b26\u300c\u30dd\u30a4\u30ba\u30f3\u30d6\u30ec\u30a4\u30ab\u30fc\u300d|FULLBREAK|10|0|1|5|epic|10\u500d+\u72b6\u614b\u7570\u5e38\u00d75\u500d|drop\nsc_e3|\u604b\u7b26\u300c\u30de\u30b9\u30bf\u30fc\u30b9\u30d1\u30fc\u30af\u300d|SINGLE|20|0|1|0|epic|\u5358\u4f5320\u500d|drop\nsc_e4|\u98a8\u7b26\u300c\u30b5\u30a4\u30af\u30ed\u30f3\u30d6\u30ec\u30fc\u30c9\u300d|MULTI|8|0|5|0|epic|5\u90238\u500d=\u8a0840\u500d|drop\nsc_e5|\u970a\u7b26\u300c\u970a\u529b\u5927\u7206\u767a\u300d|SELFBUFF|12|150|1|0|epic|ATK+150%\u5f8c12\u500d|drop\nsc_e6|\u6ec5\u7b26\u300c\u30c7\u30b9\u30c8\u30e9\u30af\u30b7\u30e7\u30f3\u30d6\u30ec\u30a4\u30af\u300d|FULLBREAK|12|0|1|8|epic|12\u500d+\u72b6\u614b\u7570\u5e38\u00d78\u500d|drop\nsc_l1|\u5922\u60f3\u300c\u5c01\u5370\u89e3\u653e\u300d|SELFBUFF|15|200|1|0|legendary|ATK+200%(5t)\u5f8c15\u500d|drop\nsc_l2|\u300c\u7d42\u7109\u306e\u5f3e\u5e55\u300d|FULLBREAK|15|0|1|10|legendary|15\u500d+\u72b6\u614b\u7570\u5e38\u00d710\u500d|drop\nsc_l3|\u7981\u5f3e\u300c\u30b9\u30bf\u30fc\u30c0\u30b9\u30c8\u30ea\u30d0\u30fc\u30bb\u30a4\u30f3\u30c8\u300d|SINGLE|25|0|1|0|legendary|\u5fc5\u4e2d25\u500d|drop\nsc_l4|\u5929\u7b26\u300c\u30b0\u30e9\u30f3\u30c9\u30af\u30ed\u30b9\u300d|MULTI|12|0|7|0|legendary|7\u902312\u500d|drop\nsc_l5|\u795e\u7b26\u300c\u795e\u6483\u30fb\u5b87\u5b99\u8ad6\u300d|SELFBUFF|20|300|1|0|legendary|ATK+300%\u5f8c20\u500d|drop\nsc_l6|\u300c\u4e07\u7269\u7d42\u7109\u306e\u4e00\u6483\u300d|FULLBREAK|20|0|1|15|legendary|20\u500d+\u72b6\u614b\u7570\u5e38\u00d715\u500d|drop\nsc_l7|\u5e7b\u7b26\u300c\u5922\u5e7b\u6ce1\u5f71\u300d|SELFBUFF|18|250|1|0|legendary|ATK+250%(4t)\u5f8c18\u500d|drop\nsc_l8|\u8987\u7b26\u300c\u5b87\u5b99\u5236\u8987\u30b9\u30da\u30af\u30bf\u30af\u30eb\u300d|MULTI|15|0|5|0|legendary|5\u902315\u500d|drop\nsc_m1|\u3010\u795e\u8a71\u3011\u795e\u8a71\u300c\u30a2\u30eb\u30c6\u30a3\u30e1\u30c3\u30c8\u30b9\u30d1\u30fc\u30af\u300d|SINGLE|40|0|1|0|mystic|\u30dc\u30b9\u9650\u5b9a\u3002\u5fc5\u4e2d40\u500d|boss\nsc_m2|\u3010\u795e\u8a71\u3011\u7d42\u7109\u300c\u30b8\u30e3\u30c3\u30b8\u30e1\u30f3\u30c8\u30c7\u30a4\u300d|FULLBREAK|25|0|1|20|mystic|\u30dc\u30b9\u9650\u5b9a\u300225\u500d+\u7570\u5e38\u00d720\u500d|boss\nsc_m3|\u3010\u795e\u8a71\u3011\u5275\u9020\u300c\u30d3\u30c3\u30b0\u30d0\u30f3\u30b8\u30a7\u30cd\u30b7\u30b9\u300d|SELFBUFF|30|400|1|0|mystic|\u30dc\u30b9\u9650\u5b9a\u3002ATK+400%\u5f8c30\u500d|boss\n";
+window.TAG_DATA = "# ================================================================\n# tag_card.txt \u2014 \u5f3e\u5e55\u30ab\u30fc\u30c9\u30ed\u30fc\u30b0\u30e9\u30a4\u30afRPG\n# ================================================================\n# \u30bf\u30b0\u5f62\u5f0f: \u30b9\u30da\u30fc\u30b9\u533a\u5207\u308a\u3001\u30b3\u30ed\u30f3\u533a\u5207\u308a\n# \u5165\u624b\u533a\u5206: shop/edrop/boss/drop(\u901a\u5e38) - HTML\u304c\u30d5\u30a3\u30eb\u30bf\u306b\u4f7f\u7528\n# ================================================================\n\n[SKILL]\n# id|name|tags|sp|rarity|desc|source\n# \u2500\u2500 \u65ac\u6483\u5c5e\u6027 \u2500\u2500\n1  |\u65ac\u6483         |ATTR:\u65ac ATK:1.2 HIT:1                              |1|common   |\u57fa\u672c\u306e\u4e00\u6483|drop\n2  |\u9023\u6483         |ATTR:\u65ac ATK:0.7 HIT:3                              |2|common   |3\u9023\u6483|drop\n3  |\u5f37\u65ac\u308a       |ATTR:\u65ac ATK:2.0 HIT:1                              |2|rare     |\u5358\u767a\u91cd\u653b\u6483|drop\n4  |\u4e71\u6253         |ATTR:\u65ac ATK:0.5 HIT:6                              |3|rare     |6\u9023\u6483|drop\n5  |\u65cb\u98a8\u65ac       |ATTR:\u65ac ATK:0.8 HIT:4                              |2|rare     |4\u9023\u56de\u8ee2\u65ac|drop\n6  |\u771f\u7a7a\u65ac       |ATTR:\u65ac ATK:1.5 HIT:1 BUFF_ATK:30                  |2|rare     |\u65ac+ATK\u30d0\u30d5|drop\n7  |\u971e\u65ac\u308a       |ATTR:\u65ac ATK:1.0 HIT:1 FAST                         |1|rare     |\u5373\u653b\u306e\u7d20\u65e9\u3044\u65ac\u6483|drop\n8  |\u53cc\u5263\u4e71\u821e     |ATTR:\u65ac ATK:0.6 HIT:10                             |4|epic     |10\u9023\u53cc\u5263|drop\n9  |\u6ec5\u6bba\u5263       |ATTR:\u65ac ATK:3.0 HIT:2                              |4|epic     |2\u6483\u8d85\u91cd\u653b\u6483|drop\n10 |\u525b\u529b\u65ac       |ATTR:\u65ac ATK:4.0 HIT:1                              |3|epic     |\u6e3e\u8eab\u306e\u91cd\u65ac|drop\n11 |\u795e\u901f\u4e00\u5200     |ATTR:\u65ac ATK:5.0 HIT:1 FAST                         |3|epic     |\u5373\u653b\u306e\u8d85\u901f\u65ac|drop\n12 |\u4e71\u88c2\u65ac       |ATTR:\u65ac ATK:0.9 HIT:5 BREAK:5                      |4|epic     |5\u9023+\u30d6\u30ec\u30a4\u30af|drop\n13 |\u7e26\u65ad\u65ac       |ATTR:\u65ac ATK:4.0 HIT:1 EXCLUDE                      |4|epic     |\u9664\u59161\u62261\u56de|drop\n14 |\u767e\u70c8\u65ac       |ATTR:\u65ac ATK:0.3 HIT:15                             |5|legendary|15\u9023\u4e71\u6483|drop\n15 |\u7121\u9650\u5203       |ATTR:\u65ac ATK:1.0 HIT:8                              |4|legendary|8\u9023\u5263\u306e\u5d50|drop\n16 |\u795e\u306e\u4e00\u5200     |ATTR:\u65ac ATK:8.0 HIT:1 EXCLUDE                      |5|legendary|\u9664\u5916:\u7a76\u6975\u4e00\u5200|drop\n17 |\u6d41\u661f\u4e71\u65ac     |ATTR:\u65ac ATK:0.7 HIT:12 TRIGGER:HIT:BUFF_ATK:5      |5|legendary|12\u9023+\u30d2\u30c3\u30c8ATKUP|drop\n# \u2500\u2500 \u9b54\u6cd5\u5c5e\u6027 \u2500\u2500\n18 |\u9b54\u5f3e         |ATTR:\u9b54 ATK:1.8 HIT:1                              |2|rare     |\u51dd\u7e2e\u9b54\u529b\u5f3e|drop\n19 |\u9b54\u6cd5\u9663       |ATTR:\u9b54 ATK:0.9 HIT:3 STATUS:STUN:25:1             |2|rare     |3\u9023+\u6c17\u7d76|drop\n20 |\u96f7\u6483         |ATTR:\u9b54 ATK:2.2 HIT:1 STATUS:STUN:30:1             |2|rare     |\u96f7+\u6c17\u7d76|drop\n21 |\u9023\u9396\u9b54\u6cd5     |ATTR:\u9b54 ATK:1.0 HIT:5 TRIGGER:HIT:BUFF_ATK:15      |4|epic     |5\u9023+\u30d2\u30c3\u30c8ATKUP15%|drop\n22 |\u9b54\u529b\u7206\u767a     |ATTR:\u9b54 ATK:4.0 HIT:1                              |3|epic     |\u9b54\u529b\u7206\u6563|drop\n23 |\u661f\u964d\u308a       |ATTR:\u9b54 ATK:0.7 HIT:7                              |3|rare     |7\u9023\u661f\u5f3e|drop\n24 |\u5927\u9b54\u6cd5\u9663     |ATTR:\u9b54 ATK:4.5 HIT:2 EXCLUDE                      |4|epic     |\u9664\u5916:\u8907\u5408\u9b54\u6cd5\u9663|drop\n25 |\u53ec\u559a\u8853       |ATTR:\u9b54 ATK:2.0 HIT:4                              |3|rare     |\u7cbe\u970a4\u4f53\u53ec\u559a|drop\n26 |\u9b54\u529b\u53ce\u675f     |ATTR:\u9b54 ATK:1.0 HIT:2 TRIGGER:HIT:BUFF_ATK:25      |2|rare     |2\u9023+\u30d2\u30c3\u30c8ATKUP25%|drop\n27 |\u9b54\u6cd5\u9663\u5c55\u958b   |ATTR:\u9b54 BUFF_ATK:200 FAST EXCLUDE                   |2|legendary|\u5373\u653b\u9664\u5916:ATK+200%|drop\n28 |\u6b21\u5143\u65ac       |ATTR:\u9b54 ATK:7.0 HIT:1 EXCLUDE                      |5|legendary|\u9664\u5916:\u6b21\u5143\u3092\u65ac\u308b|drop\n29 |\u7981\u546a         |ATTR:\u9b54 ATK:8.0 HIT:1 CURSE_DMG:20                 |5|legendary|\u8d85\u9ad8\u706b\u529b+\u546a\u3044\u53cd\u52d5|drop\n30 |\u9b54\u529b\u306e\u5d50     |ATTR:\u9b54 ATK:1.5 HIT:6 STATUS:SILENCE:20:2          |4|epic     |6\u9023+\u6c88\u9ed9\u4ed8\u4e0e|drop\n31 |\u5c01\u5370\u8853       |ATTR:\u9b54 BUFF_ATK:300 FAST EXCLUDE                   |3|legendary|\u5373\u653b\u9664\u5916:ATK+300%|drop\n32 |\u9b54\u529b\u6ce2\u52d5     |ATTR:\u9b54 ATK:1.5 HIT:3 BUFF_ATK:50                  |3|epic     |3\u9023+ATK\u30d0\u30d550%|drop\n# \u2500\u2500 \u6bd2\u5c5e\u6027 \u2500\u2500\n33 |\u6bd2\u91dd         |ATTR:\u6bd2 ATK:0.6 HIT:1 STATUS:POISON:70:3           |1|common   |\u6bd2\u4ed8\u4e0e70%|drop\n34 |\u6bd2\u5d50         |ATTR:\u6bd2 ATK:0.5 HIT:5 STATUS:POISON:90:4           |3|epic     |5\u9023\u6bd2|drop\n35 |\u731b\u6bd2\u7259       |ATTR:\u6bd2 ATK:1.5 HIT:1 STATUS:POISON:100:4          |2|rare     |\u78ba\u5b9a\u6bd24t|drop\n36 |\u6bd2\u9727         |ATTR:\u6bd2 STATUS:POISON:100:3 FAST                    |1|rare     |\u5373\u653b:\u78ba\u5b9a\u6bd2(\u653b\u6483\u306a\u3057)|drop\n37 |\u731b\u6bd2\u6cbc       |ATTR:\u6bd2 ATK:0.8 HIT:1 STATUS:POISON:100:6          |2|rare     |\u78ba\u5b9a\u6bd26t|drop\n38 |\u6bd2\u86c7\u7259       |ATTR:\u6bd2 ATK:0.4 HIT:3 STATUS:POISON:80:3           |2|rare     |3\u9023\u6bd2|drop\n39 |\u6bd2\u7d20\u4ed8\u4e0e     |ATTR:\u6bd2 STATUS:POISON:100:5 BUFF_ATK:50 FAST        |2|epic     |\u5373\u653b:\u78ba\u5b9a\u6bd25t+ATK\u30d0\u30d5|drop\n40 |\u6bd2\u7206\u767a       |ATTR:\u6bd2 ATK:0.5 HIT:4 STATUS:POISON:100:3 BREAK:5  |4|epic     |4\u9023\u6bd2+\u30d6\u30ec\u30a4\u30af5\u500d|drop\n41 |\u731b\u6bd2\u7d50\u754c     |ATTR:\u6bd2 ATK:0.2 HIT:8 STATUS:POISON:100:5          |4|legendary|8\u9023\u78ba\u5b9a\u6bd25t|drop\n42 |\u6bd2\u817a\u7206\u7834     |ATTR:\u6bd2 ATK:0.3 HIT:10 STATUS:POISON:90:4 BREAK:6  |5|legendary|10\u9023\u6bd2+\u30d6\u30ec\u30a4\u30af6\u500d|drop\n43 |\u6bd2\u8150\u98df\u7834\u58ca   |ATTR:\u6bd2 ATK:0.5 HIT:5 STATUS:POISON:90:3 BREAK:5   |4|epic     |5\u9023\u6bd2+\u30d6\u30ec\u30a4\u30af5|drop\n44 |\u6bd2\u7b26         |ATTR:\u6bd2 ATK:1.0 HIT:1 STATUS:POISON:60:4 TRIGGER:HIT:BUFF_ATK:10|3|epic|\u6bd2+\u30d2\u30c3\u30c8ATKUP|drop\n# \u2500\u2500 \u708e\u5c5e\u6027 \u2500\u2500\n45 |\u70c8\u706b         |ATTR:\u708e ATK:1.5 HIT:1 STATUS:BURN:60:2             |2|rare     |\u71c3\u713c\u4ed8\u4e0e60%|drop\n46 |\u708e\u306e\u4e00\u6483     |ATTR:\u708e ATK:2.0 HIT:1 STATUS:BURN:80:2             |2|rare     |\u708e\u6483+\u71c3\u713c80%|drop\n47 |\u708e\u5d50         |ATTR:\u708e ATK:0.8 HIT:4 STATUS:BURN:70:2             |3|rare     |4\u9023\u708e+\u71c3\u713c|drop\n48 |\u696d\u706b         |ATTR:\u708e ATK:3.5 HIT:1 STATUS:BURN:90:3             |3|epic     |\u708e+\u71c3\u713c90%|drop\n49 |\u708e\u7b26         |ATTR:\u708e STATUS:BURN:100:4 BUFF_ATK:80 FAST          |2|epic     |\u5373\u653b:\u78ba\u5b9a\u71c3\u713c4t+ATK\u30d0\u30d5|drop\n50 |\u7206\u708e         |ATTR:\u708e ATK:2.5 HIT:2 STATUS:BURN:80:3             |3|epic     |2\u9023\u708e+\u71c3\u713c|drop\n51 |\u708e\u306e\u7adc\u7259     |ATTR:\u708e ATK:1.0 HIT:5 STATUS:BURN:60:2 BREAK:6     |4|epic     |5\u9023\u708e+\u30d6\u30ec\u30a4\u30af6\u500d|drop\n52 |\u8d85\u696d\u706b       |ATTR:\u708e ATK:6.0 HIT:1 STATUS:BURN:100:3 EXCLUDE     |5|legendary|\u9664\u5916:\u78ba\u5b9a\u71c3\u713c+\u8d85\u706b\u529b|drop\n53 |\u708e\u306e\u6e26       |ATTR:\u708e ATK:0.5 HIT:8 STATUS:BURN:50:2             |4|legendary|8\u9023\u708e\u306e\u6e26|drop\n54 |\u7126\u71b1\u5730\u7344     |ATTR:\u708e ATK:0.3 HIT:12 STATUS:BURN:80:3 BREAK:8    |5|legendary|12\u9023\u708e+\u30d6\u30ec\u30a4\u30af8\u500d|drop\n55 |\u7206\u708e\u9023\u5c04     |ATTR:\u708e ATK:1.2 HIT:3 STATUS:BURN:70:2             |3|epic     |3\u9023\u708e\u5f3e+\u71c3\u713c|drop\n56 |\u708e\u306e\u7cbe\u970a     |ATTR:\u708e ATK:2.0 HIT:1 BUFF_ATK:100 STATUS:BURN:70:2|4|epic    |\u708e+ATK2\u500d+\u71c3\u713c|drop\n# \u2500\u2500 \u6c37\u5c5e\u6027 \u2500\u2500\n57 |\u6c37\u67f1         |ATTR:\u6c37 ATK:1.5 HIT:1 STATUS:FREEZE:50:2           |2|rare     |\u6c37\u7d50\u4ed8\u4e0e50%|drop\n58 |\u5439\u96ea         |ATTR:\u6c37 ATK:0.7 HIT:4 STATUS:FREEZE:60:2           |2|rare     |4\u9023+\u6c37\u7d50|drop\n59 |\u6c37\u306e\u5203       |ATTR:\u6c37 ATK:2.0 HIT:1 STATUS:FREEZE:70:2           |2|rare     |\u6c37\u5203+\u6c37\u7d5070%|drop\n60 |\u6c37\u5d50         |ATTR:\u6c37 ATK:0.5 HIT:6 STATUS:FREEZE:80:3           |3|epic     |6\u9023\u6c37\u5d50+\u6c37\u7d50|drop\n61 |\u7d76\u5bfe\u96f6\u5ea6     |ATTR:\u6c37 ATK:5.0 HIT:1 STATUS:FREEZE:90:3 EXCLUDE    |4|epic     |\u9664\u5916:\u6c37\u7d5090%+\u5927\u30c0\u30e1|drop\n62 |\u6c37\u584a\u843d\u4e0b     |ATTR:\u6c37 ATK:3.5 HIT:1 STATUS:FREEZE:100:2          |3|epic     |\u78ba\u5b9a\u6c37\u7d50+\u5927\u30c0\u30e1|drop\n63 |\u4e07\u5e74\u6c37       |ATTR:\u6c37 ATK:1.0 HIT:5 STATUS:FREEZE:70:3 BREAK:5   |4|epic     |5\u9023\u6c37+\u30d6\u30ec\u30a4\u30af5|drop\n64 |\u6c37\u6cb3         |ATTR:\u6c37 ATK:0.3 HIT:10 STATUS:FREEZE:90:4          |5|legendary|10\u9023\u6c37+\u6c37\u7d5090%|drop\n65 |\u51cd\u7d50\u7b26       |ATTR:\u6c37 STATUS:FREEZE:100:3 BUFF_ATK:100 FAST        |2|epic     |\u5373\u653b:\u78ba\u5b9a\u6c37\u7d503t+ATK\u30d0\u30d5|drop\n66 |\u971c\u306e\u4e00\u6483     |ATTR:\u6c37 ATK:2.5 HIT:1 STATUS:FREEZE:80:2           |2|rare     |\u6c37\u6483+\u6c37\u7d5080%|drop\n67 |\u6c37\u306e\u5d50       |ATTR:\u6c37 ATK:0.6 HIT:8 STATUS:FREEZE:70:3 BREAK:6   |5|legendary|8\u9023\u6c37\u5d50+\u30d6\u30ec\u30a4\u30af6|drop\n# \u2500\u2500 \u5149\u5c5e\u6027 \u2500\u2500\n68 |\u56de\u5fa9\u8853       |ATTR:\u5149 HEAL:30 FAST                                |2|common   |\u5373\u653b:HP+30|drop\n69 |\u5927\u56de\u5fa9\u8853     |ATTR:\u5149 HEAL:80                                     |3|epic     |HP+80\u5927\u56de\u5fa9|drop\n70 |\u8056\u306a\u308b\u5149     |ATTR:\u5149 HEAL:50 BUFF_ATK:50 FAST                    |2|rare     |\u5373\u653b:HP+50+ATK\u30d0\u30d5|drop\n71 |\u30d2\u30fc\u30eb\u6ce2\u52d5   |ATTR:\u5149 HEAL:60 BUFF_ATK:50 FAST                    |3|epic     |\u5373\u653b:HP+60+ATK\u30d0\u30d5|drop\n72 |\u795e\u8056\u9b54\u6cd5     |ATTR:\u5149 ATK:2.0 HIT:1 HEAL:20                      |3|rare     |\u653b\u6483+HP20\u56de\u5fa9|drop\n73 |\u8056\u5263         |ATTR:\u5149 ATK:3.0 HIT:1 BUFF_ATK:100                 |3|epic     |\u5f37\u6483+ATK2\u500d\u30d0\u30d5|drop\n74 |\u5149\u306e\u5f3e\u5e55     |ATTR:\u5149 ATK:0.8 HIT:6 HEAL:20                      |4|epic     |6\u9023\u653b\u6483+HP\u56de\u5fa9|drop\n75 |\u6d44\u5316\u306e\u5149     |ATTR:\u5149 HEAL:100 BUFF_ATK:100 FAST                  |4|legendary|\u5373\u653b:HP+100+ATK2\u500d|drop\n76 |\u795e\u306e\u52a0\u8b77     |ATTR:\u5149 HEAL:200 FAST EXCLUDE                        |4|legendary|\u5373\u653b\u9664\u5916:HP+200|drop\n77 |\u8056\u5149\u6ce2       |ATTR:\u5149 ATK:1.5 HIT:3 HEAL:15                      |3|rare     |3\u9023\u653b\u6483+HP\u56de\u5fa9|drop\n78 |\u5149\u306e\u93a7       |ATTR:\u5149 BUFF_ATK:150 FAST                           |2|rare     |\u5373\u653b:ATK+150%(\u653b\u6483\u306a\u3057)|drop\n79 |\u795e\u8056\u7206\u767a     |ATTR:\u5149 ATK:5.0 HIT:1 HEAL:50 EXCLUDE               |5|legendary|\u9664\u5916:\u8d85\u5927\u6280+HP50\u56de\u5fa9|drop\n# \u2500\u2500 \u95c7\u5c5e\u6027 \u2500\u2500\n80 |\u95c7\u306e\u4e00\u6483     |ATTR:\u95c7 ATK:2.0 HIT:1 STATUS:WEAKEN:50:3           |2|rare     |\u5f31\u4f53\u5316\u4ed8\u4e0e50%|drop\n81 |\u30c9\u30ec\u30a4\u30f3     |ATTR:\u95c7 ATK:1.5 HIT:1 DRAIN:30                     |2|rare     |30%HP\u5438\u53ce|drop\n82 |\u95c7\u306e\u9023\u6253     |ATTR:\u95c7 ATK:0.8 HIT:4 STATUS:WEAKEN:40:2           |3|rare     |4\u9023+\u5f31\u4f53\u5316|drop\n83 |\u546a\u3044\u306e\u5203     |ATTR:\u95c7 ATK:1.8 HIT:1 STATUS:WEAKEN:60:3           |2|rare     |\u5f31\u4f53\u531660%3t|drop\n84 |\u6697\u9ed2\u9b54\u6cd5     |ATTR:\u95c7 ATK:3.0 HIT:1 STATUS:WEAKEN:70:3           |3|epic     |\u6697\u9ed2\u9b54\u6cd5+\u5f31\u4f53\u5316|drop\n85 |\u751f\u547d\u5438\u53ce     |ATTR:\u95c7 ATK:2.0 HIT:3 DRAIN:50                     |4|epic     |3\u902350%HP\u5438\u53ce|drop\n86 |\u546a\u7e1b\u7b26       |ATTR:\u95c7 STATUS:SILENCE:50:2 STATUS:WEAKEN:80:3 FAST  |2|epic     |\u5373\u653b:\u6c88\u9ed9+\u5f31\u4f53\u5316(\u653b\u6483\u306a\u3057)|drop\n87 |\u9b42\u5438\u53ce       |ATTR:\u95c7 ATK:1.0 HIT:5 DRAIN:40                     |4|epic     |5\u902340%HP\u5438\u53ce|drop\n88 |\u6b7b\u306e\u5ba3\u544a     |ATTR:\u95c7 ATK:6.0 HIT:1 CURSE_DMG:30                 |5|legendary|\u8d85\u706b\u529b+\u546a\u3044\u53cd\u52d530|drop\n89 |\u865a\u7121\u306e\u5203     |ATTR:\u95c7 ATK:4.0 HIT:2 STATUS:WEAKEN:90:4           |4|legendary|2\u9023\u8d85\u5f37\u6483+\u5f31\u4f53\u5316|drop\n90 |\u6697\u9ed2\u306e\u5d50     |ATTR:\u95c7 ATK:0.5 HIT:10 STATUS:WEAKEN:60:3 DRAIN:20  |5|legendary|10\u9023+\u5f31\u4f53\u5316+\u5438\u53ce|drop\n91 |\u546a\u3044\u306e\u9023\u9396   |ATTR:\u95c7 ATK:0.7 HIT:5 STATUS:WEAKEN:70:3 TRIGGER:HIT:BUFF_ATK:15|4|legendary|5\u9023\u5f31\u4f53\u5316+\u30d2\u30c3\u30c8ATKUP|drop\n# \u2500\u2500 \u970a\u5c5e\u6027/OP\u30b9\u30ad\u30eb \u2500\u2500\n92 |\u970a\u529b\u6ce2       |ATTR:\u970a ATK:1.5 HIT:1 TRIGGER:HIT:CHARGE_OP:5      |2|rare     |1\u6483+\u30d2\u30c3\u30c8\u3054\u3068OP+5|drop\n93 |\u970a\u529b\u7832       |ATTR:\u970a ATK:3.0 HIT:1 TRIGGER:HIT:CHARGE_OP:10     |3|epic     |\u5f37\u6483+\u30d2\u30c3\u30c8\u3054\u3068OP+10|drop\n94 |\u970a\u5f3e         |ATTR:\u970a ATK:0.8 HIT:4 TRIGGER:HIT:BUFF_ATK:10      |3|rare     |4\u9023+\u30d2\u30c3\u30c8ATKUP10%|drop\n95 |\u970a\u529b\u7206\u767a     |ATTR:\u970a ATK:4.0 HIT:1 TRIGGER:HIT:CHARGE_OP:20 EXCLUDE|4|epic|\u9664\u5916:\u5f37\u6483+\u30d2\u30c3\u30c8OP+20|drop\n96 |\u970a\u529b\u306e\u5d50     |ATTR:\u970a ATK:0.5 HIT:8 TRIGGER:HIT:BUFF_ATK:15      |4|epic     |8\u9023+\u30d2\u30c3\u30c8ATKUP15%|drop\n97 |\u970a\u529b\u30c1\u30e3\u30fc\u30b8 |ATTR:\u970a CHARGE_OP:30 BUFF_ATK:50 FAST               |1|rare     |\u5373\u653b:OP+30+ATK\u30d0\u30d5(\u653b\u6483\u306a\u3057)|drop\n98 |\u970a\u529b\u5927\u7832     |ATTR:\u970a ATK:5.0 HIT:1 CHARGE_OP:20                 |4|epic     |\u5f37\u6483+OP+20\u76f4\u63a5|drop\n99 |\u970a\u529b\u89e3\u653e     |ATTR:\u970a BUFF_ATK:200 CHARGE_OP:50 FAST EXCLUDE       |3|legendary|\u5373\u653b\u9664\u5916:ATK+200%+OP+50|drop\n100|\u970a\u529b\u6ce2\u52d5     |ATTR:\u970a ATK:1.2 HIT:5 TRIGGER:HIT:CHARGE_OP:5      |4|epic     |5\u9023+\u30d2\u30c3\u30c8OP+5|drop\n101|\u970a\u529b\u306e\u6975\u610f   |ATTR:\u970a ATK:2.0 HIT:3 BUFF_ATK:50 CHARGE_OP:15     |4|epic     |3\u9023+\u30d0\u30d5+OP15|drop\n102|\u970a\u529b\u7d50\u754c     |ATTR:\u970a BUFF_ATK:200 TRIGGER:HIT:CHARGE_OP:30 FAST EXCLUDE|4|legendary|\u5373\u653b\u9664\u5916:\u8d85\u5f37\u5316+OP\u7a3c\u304e|drop\n# \u2500\u2500 \u7279\u6b8a \u2500\u2500\n103|\u7d50\u754c\u7815\u304d     |ATTR:\u7279 ATK:3.0 HIT:1 BREAK:7                      |4|epic     |\u72b6\u614b\u7570\u5e38\u306e\u6575\u306b7\u500d\u30d6\u30ec\u30a4\u30af|drop\n104|\u9b54\u7832         |ATTR:\u7279 ATK:5.0 HIT:1 BREAK:10 EXCLUDE              |5|legendary|\u9664\u5916:10\u500d\u30d6\u30ec\u30a4\u30af|drop\n105|\u708e\u7206\u7815       |ATTR:\u7279 ATK:1.0 HIT:3 STATUS:BURN:80:2 BREAK:6     |4|epic     |3\u9023\u708e\u4ed8\u4e0e+\u30d6\u30ec\u30a4\u30af6|drop\n106|\u6c37\u7815\u304d       |ATTR:\u7279 ATK:2.0 HIT:2 STATUS:FREEZE:70:2 BREAK:5   |3|epic     |2\u9023\u6c37\u4ed8\u4e0e+\u30d6\u30ec\u30a4\u30af5|drop\n107|\u5168\u529b\u4e00\u6483     |ATTR:\u7279 ATK:10.0 HIT:1 CURSE_DMG:50                 |5|legendary|\u8d85\u9ad8\u706b\u529b+\u546a\u3044\u53cd\u52d550|drop\n108|\u9023\u9396\u7206\u767a     |ATTR:\u7279 ATK:1.5 HIT:5 TRIGGER:HIT:BUFF_ATK:20 BREAK:4|5|legendary|5\u9023+\u30d0\u30d5+\u30d6\u30ec\u30a4\u30af4|drop\n109|\u9b3c\u795e\u306e\u4e00\u6483   |ATTR:\u7279 ATK:8.0 HIT:1 EXCLUDE                       |5|legendary|\u9664\u5916:\u9b3c\u795e\u306e\u8d85\u4e00\u6483|drop\n110|\u6700\u5f8c\u306e\u4e00\u6483   |ATTR:\u7279 ATK:15.0 HIT:1 CURSE_DMG:10 RESTORE_SP:2 DRAW:3 EXCLUDE|5|legendary|\u9664\u5916:\u6700\u5927\u706b\u529b/HP-10\u306e\u4ee3\u308f\u308a\u306bSP+2&3\u30c9\u30ed\u30fc|drop\n111|\u4e71\u6253\u9023\u6483     |ATTR:\u7279 ATK:0.4 HIT:12 TRIGGER:HIT:BUFF_ATK:10     |5|legendary|12\u9023+\u30d2\u30c3\u30c8ATKUP10%|drop\n112|\u30d0\u30d5\u9023\u6483     |ATTR:\u7279 BUFF_ATK:100 ATK:0.8 HIT:3                  |3|epic     |ATK+100%\u5f8c3\u9023\u6483|drop\n113|\u9f13\u821e         |ATTR:\u7279 BUFF_ATK:200 FAST EXCLUDE                    |2|legendary|\u5373\u653b\u9664\u5916:ATK+200%\u8d85\u30d0\u30d5|drop\n114|\u6bd2\u708e\u8907\u5408     |ATTR:\u7279 ATK:0.5 HIT:5 STATUS:POISON:80:3 STATUS:BURN:60:2|4|epic|5\u9023\u6bd2\u708e\u8907\u5408|drop\n115|\u6c37\u6bd2\u8907\u5408     |ATTR:\u7279 ATK:0.5 HIT:4 STATUS:FREEZE:70:2 STATUS:POISON:70:3|4|epic|4\u9023\u6c37\u6bd2\u8907\u5408|drop\n# \u2500\u2500 \u30b7\u30e7\u30c3\u30d7\u9650\u5b9a \u2500\u2500\n116|\u5546\u4eba\u306e\u525b\u5263   |ATTR:\u65ac ATK:6.0 HIT:1                              |4|epic     |\u30b7\u30e7\u30c3\u30d7\u9650\u5b9a\u3002\u5b89\u5b9a\u3057\u305f\u9ad8\u706b\u529b|shop\n117|\u5c02\u58f2\u7279\u8a31\u306e\u76fe |ATTR:\u5149 BUFF_ATK:120 HEAL:40 FAST                   |3|epic     |\u30b7\u30e7\u30c3\u30d7\u9650\u5b9a\u3002\u30d0\u30d5+\u56de\u5fa9|shop\n118|\u9650\u5b9a\u751f\u7523\u300c\u7834\u6ec5\u306e\u69cd\u300d|ATTR:\u95c7 ATK:9.0 HIT:1 DRAIN:30              |5|legendary|\u30b7\u30e7\u30c3\u30d7\u9650\u5b9a\u3002\u8d85\u9ad8\u706b\u529b+\u751f\u547d\u5438\u53ce|shop\n119|\u970a\u529b\u306e\u79d8\u85ac   |ATTR:\u970a CHARGE_OP:60 BUFF_ATK:80 FAST EXCLUDE        |3|legendary|\u30b7\u30e7\u30c3\u30d7\u9650\u5b9a\u9664\u5916:OP+60+ATK\u30d0\u30d5|shop\n# \u2500\u2500 \u6575\u30c9\u30ed\u30c3\u30d7\u9650\u5b9a \u2500\u2500\n120|\u30b4\u30d6\u30ea\u30f3\u306e\u79d8\u4f1d\u62f3|ATTR:\u65ac ATK:2.5 HIT:2 TRIGGER:HIT:BUFF_ATK:20  |3|epic     |\u30c9\u30ed\u30c3\u30d7\u9650\u5b9a|edrop\n121|\u7adc\u306e\u9006\u9c57     |ATTR:\u708e ATK:7.0 HIT:1 STATUS:BURN:100:4 BREAK:8    |5|legendary|\u30c9\u30ed\u30c3\u30d7\u9650\u5b9a\u3002\u30c9\u30e9\u30b4\u30f3\u306e\u5965\u7fa9|edrop\n122|\u6b7b\u970a\u306e\u546a\u8a5b   |ATTR:\u95c7 ATK:0.4 HIT:8 STATUS:WEAKEN:90:4 DRAIN:35  |5|legendary|\u30c9\u30ed\u30c3\u30d7\u9650\u5b9a\u3002\u30cd\u30af\u30ed\u30de\u30f3\u30b5\u30fc\u306e\u79d8\u8853|edrop\n123|\u9b54\u738b\u306e\u90aa\u773c   |ATTR:\u9b54 ATK:0.6 HIT:6 BREAK:12 STATUS:WEAKEN:80:3  |5|legendary|\u30c9\u30ed\u30c3\u30d7\u9650\u5b9a\u3002\u9b54\u738b\u306e\u90aa\u773c|edrop\n# \u2500\u2500 Mystic\u30b9\u30ad\u30eb(\u30dc\u30b9\u9650\u5b9a) \u2500\u2500\n124|\u3010\u795e\u696d\u3011\u5929\u5730\u5275\u9020      |ATTR:\u7279 ATK:12.0 HIT:1 BUFF_ATK:100 EXCLUDE  |5|mystic|\u30dc\u30b9\u9650\u5b9a\u3002\u795e\u8a71\u7d1a\u306e\u4e00\u6483|boss\n125|\u3010\u795e\u696d\u3011\u865a\u7121\u306e\u7d42\u7109    |ATTR:\u95c7 ATK:0.8 HIT:10 BREAK:20 EXCLUDE      |5|mystic|\u30dc\u30b9\u9650\u5b9a\u3002\u5168\u3066\u3092\u7121\u306b\u5e30\u3059|boss\n126|\u3010\u795e\u696d\u3011\u5b87\u5b99\u306e\u771f\u7406    |ATTR:\u970a ATK:5.0 HIT:3 TRIGGER:HIT:CHARGE_OP:30 BUFF_ATK:150|5|mystic|\u30dc\u30b9\u9650\u5b9a|boss\n127|\u3010\u795e\u696d\u3011\u58ca\u308c\u305f\u61d0\u4e2d\u6642\u8a08|ATTR:\u7279 BUFF_ATK:80 FAST EXCLUDE STATUS:SURE:100:1|3|mystic|\u5373\u653b\u9664\u5916SP3:ATK+80%(2turn)+\u6b21\u306e\u653b\u6483\u5fc5\u4e2d+\u72b6\u614b\u7570\u5e38\u89e3\u9664|boss\n128|\u3010\u795e\u696d\u3011\u970a\u7b26\u300c\u5922\u60f3\u5929\u751f\u300d|ATTR:\u970a ATK:3.0 HIT:5 TRIGGER:HIT:CHARGE_OP:20 TRIGGER:HIT:BUFF_ATK:20|5|mystic|\u30dc\u30b9\u9650\u5b9a\u3002\u8907\u5408\u30c8\u30ea\u30ac\u30fc|boss\n129|\u3010\u795e\u696d\u3011\u708e\u7b26\u300c\u5730\u7344\u306e\u696d\u706b\u300d|ATTR:\u708e ATK:2.0 HIT:6 STATUS:BURN:100:5 BREAK:15 EXCLUDE|5|mystic|\u9664\u5916:6\u9023\u78ba\u5b9a\u71c3\u713c+\u30d6\u30ec\u30a4\u30af15\u500d|boss\n130|\u3010\u795e\u696d\u3011\u51ac\u7b26\u300c\u30c0\u30a4\u30e4\u30e2\u30f3\u30c9\u30d6\u30ea\u30b6\u30fc\u30c9\u300d|ATTR:\u6c37 ATK:0.8 HIT:15 STATUS:FREEZE:90:4 BREAK:8|5|mystic|15\u9023\u6c37\u7d50+\u30d6\u30ec\u30a4\u30af8\u500d|boss\n# \u2500\u2500 \u30e6\u30fc\u30c6\u30a3\u30ea\u30c6\u30a3 \u2500\u2500\n131|\u732e\u8eab\u306e\u4e00\u6483     |ATTR:\u7279 EXCLUDE RESTORE_SP:4                      |0|rare     |\u3053\u306e\u30ab\u30fc\u30c9\u3092\u9664\u5916\u3057\u3066SP+4\u3092\u5f97\u308b\uff08\u653b\u6483\u306a\u3057\uff09|drop\n132|\u6b8b\u5149\u306e\u56de\u60f3     |ATTR:\u7279 RECYCLE:1 FAST                            |1|rare     |\u6368\u3066\u672d\u304b\u30891\u679a\u3092\u9078\u3093\u3067\u624b\u672d\u306b\u623b\u3059\uff08\u5373\u653b\uff09|drop\n# \u2500\u2500 \u9632\u5fa1\u30b9\u30ad\u30eb\uff08\u30ef\u30f3\u30d1\u30f3\u5bfe\u7b56\uff09 \u2500\u2500\n133|\u5b88\u308a\u306e\u69cb\u3048     |ATTR:\u7279 DMG_CUT:50:2 FAST                          |2|rare     |2\u30bf\u30fc\u30f3\u306e\u9593\u3001\u88ab\u30c0\u30e1\u30fc\u30b8-50%\uff08\u5373\u653b\uff09|drop\n134|\u5b88\u8b77\u306e\u76fe       |ATTR:\u7279 SHIELD:80 FAST                             |2|rare     |HP80\u5206\u306e\u30d0\u30ea\u30a2\u3092\u5c55\u958b\uff08\u5373\u653b\uff09|drop\n135|\u5b8c\u5168\u9632\u58c1       |ATTR:\u7279 GUARD:1 FAST                               |3|epic     |\u6b21\u306e\u88ab\u5f3e\u3092\u5b8c\u5168\u306b\u7121\u52b9\u5316\uff08\u5373\u653b\uff09|drop\n# \u2500\u2500 \u30c9\u30ed\u30fc\u5c02\u7528\uff08FAST\u306e\u81ea\u52d5\u30c9\u30ed\u30fc\u3092\u7f6e\u304d\u63db\u3048\uff09 \u2500\u2500\n136|\u8ffd\u52a0\u601d\u8003       |ATTR:\u7279 DRAW:2 FAST                                |1|rare     |\u30ab\u30fc\u30c9\u30922\u679a\u30c9\u30ed\u30fc\uff08\u5373\u653b\uff09|drop\n137|\u9583\u304d\u306e\u4e00\u77ac     |ATTR:\u7279 DRAW:1 RESTORE_SP:1 FAST                   |1|rare     |\u30ab\u30fc\u30c9\u30921\u679a\u30c9\u30ed\u30fc&SP+1\uff08\u5373\u653b\u3001SP\u53ce\u652f\u00b10\uff09|drop\n\n[PASSIVE]\n# id|name|effects|rarity|desc\np1  |\u6226\u58eb\u306e\u6c17\u6982     |BUFF_ATK_PERM:10       |common   |ATK\u6c38\u7d9a+10%\np2  |\u9b54\u529b\u5faa\u74b0       |REGEN_SP:1             |common   |\u30bf\u30fc\u30f3\u958b\u59cbSP+1\np3  |\u92fc\u306e\u610f\u5fd7       |MAX_HP:20              |common   |\u6700\u5927HP+20\np4  |\u56de\u5fa9\u306e\u52a0\u8b77     |HEAL_BOOST:20          |common   |\u56de\u5fa9\u52b9\u679c+20%\np5  |\u9023\u6483\u306e\u624d       |BUFF_ATK_PERM:25       |rare     |ATK\u6c38\u7d9a+25%\np6  |OP\u5897\u5e45         |OP_BOOST:30            |rare     |OP\u7372\u5f97\u91cf+30%\np7  |\u9b54\u529b\u5727\u7e2e       |REGEN_SP:2             |epic     |\u30bf\u30fc\u30f3\u958b\u59cbSP+2\np8  |\u8987\u738b\u306e\u8840       |BUFF_ATK_PERM:50       |epic     |ATK\u6c38\u7d9a+50%\np9  |\u4e0d\u6b7b\u8eab         |TOUGH                  |legendary|HP30%\u4ee5\u4e0b\u3067\u88ab\u30c0\u30e1\u534a\u6e1b\np10 |OP\u53ce\u96c6\u5bb6       |OP_BOOST:50            |epic     |OP\u7372\u5f97\u91cf+50%\np11 |\u30d2\u30c3\u30c8\u3054\u3068\u306b\u95d8\u5fd7|TRIG_HIT_ATK:10       |epic     |\u653b\u6483\u30d2\u30c3\u30c8\u3054\u3068ATK\u00d7+10%\uff08\u6226\u95d8\u5185\uff09\np12 |\u80cc\u6c34\u306e\u95d8\u5fd7     |TRIG_RCV_ATK:50        |epic     |\u88ab\u30c0\u30e1\u306e\u305f\u3073ATK\u6c38\u7d9a\u5897\u52a0\np13 |\u96c6\u4e2d\u306e\u5883\u5730     |TRIG_TURN_CRIT:20      |rare     |\u6bce\u30bf\u30fc\u30f3\u958b\u59cb\u30af\u30ea\u30c3\u30c8\u7387+20%\np14 |\u5e78\u904b\u306e\u624b       |DRAW_PLUS:1            |rare     |\u6bce\u30bf\u30fc\u30f31\u679a\u4f59\u5206\u306b\u30c9\u30ed\u30fc\np15 |\u6bd2\u306e\u89aa\u548c       |TRIG_HIT_ATK:5         |rare     |\u653b\u6483\u30d2\u30c3\u30c8\u3054\u3068ATK+5%\np16 |\u708e\u306e\u52a0\u8b77       |OP_BOOST:20 BUFF_ATK_PERM:15|rare |OP+20%&ATK\u6c38\u7d9a+15%\np17 |\u6c37\u306e\u9632\u8b77       |MAX_HP:50              |rare     |\u6700\u5927HP+50\np18 |\u95c7\u306e\u529b         |TRIG_RCV_ATK:30        |rare     |\u88ab\u30c0\u30e1ATK\u6c38\u7d9a\u5897\u52a0\np19 |\u970a\u529b\u306e\u6e90       |REGEN_SP:1 OP_BOOST:20 |epic     |\u6bce\u30bf\u30fc\u30f3SP+1&OP+20%\np20 |\u795e\u306e\u52a0\u8b77       |MAX_HP:100 BUFF_ATK_PERM:30|epic  |HP+100&ATK\u6c38\u7d9a+30%\np21 |\u8987\u738b\u306e\u9053       |BUFF_ATK_PERM:80       |legendary|ATK\u6c38\u7d9a+80%\np22 |\u7121\u9650\u306e\u9b54\u529b     |REGEN_SP:3             |legendary|\u6bce\u30bf\u30fc\u30f3SP+3\np23 |\u795e\u8056\u306a\u76fe       |TOUGH                  |epic     |HP30%\u4ee5\u4e0b\u3067\u88ab\u30c0\u30e1\u534a\u6e1b\np24 |\u9023\u9396\u306e\u624d\u80fd     |TRIG_HIT_ATK:15        |legendary|\u30d2\u30c3\u30c8\u3054\u3068ATK+15%\uff08\u6226\u95d8\u5185\uff09\np25 |\u5b87\u5b99\u306e\u7406       |OP_BOOST:80 BUFF_ATK_PERM:50|legendary|OP+80%&ATK\u6c38\u7d9a+50%\np26 |\u30c9\u30ed\u30fc\u5f37\u5316     |DRAW_PLUS:2            |epic     |\u6bce\u30bf\u30fc\u30f32\u679a\u4f59\u5206\u306b\u30c9\u30ed\u30fc\np27 |\u3010\u795e\u8a71P\u3011\u7adc\u8108\u306e\u5deb\u5973|TRIG_HIT_ATK:20      |mystic   |\u653b\u6483\u30d2\u30c3\u30c8\u3054\u3068ATK+20%\uff08\u6226\u95d8\u5185\uff09\np28 |\u3010\u795e\u8a71P\u3011\u7791\u60f3\u306e\u5883\u5730|OP_BOOST:60          |mystic   |OP\u7372\u5f97\u91cf+60%\np29 |\u3010\u795e\u8a71P\u3011\u4e0d\u6ec5\u306e\u9b42  |MAX_HP:200 BUFF_ATK_PERM:40|mystic|HP+200&ATK\u6c38\u7d9a+40%\np30 |\u3010\u795e\u8a71P\u3011\u5239\u90a3\u306e\u6b8b\u5149    |TRIG_TURN_CRIT:35 REGEN_SP:2|mystic|\u6bce\u30bf\u30fc\u30f3\u30af\u30ea\u30c6\u30a3\u30ab\u30eb\u7387+35%&SP+2\np31 |\u3010\u795e\u8a71P\u3011\u30ea\u30b5\u30a4\u30af\u30eb|EXCL_RETURN:50     |mystic   |\u9664\u5916\u30ab\u30fc\u30c950%\u3067\u624b\u672d\u306b\u623b\u308aSP0\n\n[ENEMY]\n# name|hp|atk|opG|cp|spell|sMult|deck_type|actions\n\u30b4\u30d6\u30ea\u30f3       |60  |12 |15|8 |\u30b4\u30d6\u30ea\u30f3\u62f3         |2.5|slash  |1\n\u30b9\u30e9\u30a4\u30e0       |80  |8  |18|10|\u6eb6\u89e3\u6db2             |2.0|poison |1\n\u30b9\u30b1\u30eb\u30c8\u30f3     |100 |15 |20|12|\u9ab8\u9aa8\u306e\u4e00\u6483         |2.8|slash  |1\n\u9b54\u6cd5\u4f7f\u3044       |70  |20 |22|14|\u7d2b\u96fb\u4e00\u9583           |3.2|magic  |1\n\u6bd2\u86c7           |90  |14 |20|13|\u731b\u6bd2\u306e\u7259           |2.6|poison |1\n\u708e\u306e\u7cbe\u970a       |110 |18 |25|16|\u696d\u706b\u306e\u606f\u5439         |3.0|fire   |1\n\u6c37\u306e\u7cbe\u970a       |120 |16 |23|15|\u5439\u96ea\u5d50             |2.8|ice    |1\n\u30c9\u30ec\u30a4\u30f3\u8759\u8760   |95  |17 |22|14|\u751f\u547d\u5438\u53ce           |2.7|drain  |1\n\u95c7\u306e\u9a0e\u58eb       |150 |22 |25|18|\u865a\u7121\u306e\u4e00\u6483         |3.3|dark   |1\n\u30c9\u30e9\u30b4\u30f3       |200 |30 |30|30|\u7adc\u708e\u30d6\u30ec\u30b9\u30b9\u30c8\u30fc\u30e0 |4.0|fire   |1\n\u30cd\u30af\u30ed\u30de\u30f3\u30b5\u30fc |150 |25 |25|20|\u6028\u970a \u9ed2\u306e\u5f7c\u5cb8\u82b1    |3.5|magic  |1\n\u92fc\u306e\u9a0e\u58eb       |220 |28 |28|25|\u9244\u58c1\u306e\u4e00\u6483         |3.7|slash  |1\n\u5815\u5929\u4f7f         |280 |35 |30|35|\u8056\u5263\u306e\u4e00\u6483         |4.2|mixed  |1\n\u9b54\u738b           |350 |42 |35|60|\u6697\u9ed2\u306e\u7d42\u7109         |5.0|boss   |2\n\n[ENEMY_DECK]\n# style|skill_ids_available\nslash  |1,2,3,4,5,7,9,10,120\npoison |33,35,36,37,38,34\nfire   |45,46,47,48,50,55,121\nmagic  |18,19,20,22,23,25,26\nice    |57,58,59,60,62,66\ndark   |80,81,82,83,84,86,122\ndrain  |81,85,87,81,87,80\nmixed  |1,18,33,45,57,80,92\nboss   |9,10,11,13,24,28,31,61,95,99,104,109,121,122,123\n\n[INITIAL_DECK]\n# id|name|skill_ids|item_ids|relic_id|passive_id|unlock_floor|icon|desc\nbasic   |\u521d\u671f\u30c7\u30c3\u30ad    |1,2,2,5,68     |||    |0 |\u2694|\u653b\u6483\u30fb\u9023\u6483\u30fb\u30d0\u30d5\u306e\u30d0\u30e9\u30f3\u30b9\u578b\nslash   |\u5263\u58eb\u30c7\u30c3\u30ad    |3,4,5,7,9      |||    |5 |\ud83d\udde1|\u65ac\u6483\u7279\u5316\u306e\u9ad8\u706b\u529b\u578b\npoison  |\u6bd2\u5e2b\u30c7\u30c3\u30ad    |33,35,36,40,68 |||    |10|\u2620|\u6bd2\u91cd\u306d\u30d6\u30ec\u30a4\u30af\u30b3\u30f3\u30dc\nfire    |\u708e\u4f7f\u3044\u30c7\u30c3\u30ad  |45,47,49,51,68 |||    |15|\ud83d\udd25|\u71c3\u713c\u84c4\u7a4d\u304b\u3089\u708e\u30d6\u30ec\u30a4\u30af\nmagic   |\u9b54\u6cd5\u4f7f\u3044\u30c7\u30c3\u30ad|18,21,26,97,78 |||    |20|\u2728|\u9b54\u6cd5\u30b3\u30f3\u30dc&\u30c8\u30ea\u30ac\u30fc\nspeed   |\u901f\u653b\u30c7\u30c3\u30ad    |7,11,65,70,97  |||    |25|\u26a1|FAST\u30ab\u30fc\u30c9\u9023\u9396\u30b3\u30f3\u30dc\n# \u30ad\u30e3\u30e9\u30af\u30bf\u30fc\u30c7\u30c3\u30ad\nreimu   |\u970a\u5922\u30c7\u30c3\u30ad    |97,70,40,12,77 |ofuda,ofuda||p6|30|\u26e9|\u970a\u5922\u3002\u304a\u672d(\u5fc5\u4e2d\u30c0\u30e1)2\u679a+OP\u91cd\u8996\nmarisa  |\u9b54\u7406\u6c99\u30c7\u30c3\u30ad  |22,55,52,49,32 |||p16|35|\u2b50|\u9b54\u7406\u6c99\u3002\u9b54\u5c5e\u6027\u30c0\u30e1+\u30d1\u30c3\u30b7\u30d6\u4ed8\u304d\nflandre |\u30d5\u30e9\u30f3\u30c7\u30c3\u30ad  |56,49,40,51,67 |||p13|40|\ud83d\udd2e|\u30d5\u30e9\u30f3\u3002\u708eBREAK\u30b3\u30f3\u30dc\u7279\u5316\n\n[RELIC]\n# id|name|effect_tag|rarity|desc\ntengu_fan   |\u5929\u72d7\u306e\u56e3\u6247      |BATTLE_START_DRAW:2    |rare     |\u30d0\u30c8\u30eb\u958b\u59cb\u6642\u521d\u30bf\u30fc\u30f3\u306e\u307f\u30c9\u30ed\u30fc+2\ncharm       |\u8eab\u4ee3\u308f\u308a\u306e\u5fa1\u5b88  |REVIVE_ONCE:1          |epic     |HP0\u306b\u306a\u3063\u305f\u3068\u304d1\u5ea6\u3060\u3051HP1\u3067\u8010\u3048\u308b\uff08\u58ca\u308c\u308b\uff09\nstrange_pot |\u602a\u3057\u3044\u58fa        |SHOP_DISCOUNT:20       |rare     |\u30b7\u30e7\u30c3\u30d7\u4fa1\u683c20%\u5f15\u304d\nwitch_hat   |\u9b54\u6cd5\u4f7f\u3044\u306e\u5e3d\u5b50  |SP_COST_DOWN:1         |mystic   |\u5168\u30b9\u30ad\u30ebSP\u6d88\u8cbb-1\uff08\u6700\u4f4e0\uff09\nsages_stone |\u8ce2\u8005\u306e\u77f3        |OP_HALF:1              |mystic   |\u30b9\u30da\u30abOP\u6d88\u8cbb\u534a\u5206\nlevatein_r  |\u30ec\u30fc\u30f4\u30a1\u30c6\u30a4\u30f3(\u8d64)|ATK_MUL:2.0          |mystic   |\u5168\u653b\u6483\u529b\u00d72\u500d\nlevatein_b  |\u30ec\u30fc\u30f4\u30a1\u30c6\u30a4\u30f3(\u9752)|ATK_MUL:3.0 RECV_MUL:1.5|mystic|\u5168\u653b\u6483\u00d73\u500d\u3001\u88ab\u30c0\u30e1\u00d71.5\u500d\nrecycle_box |\u30ea\u30b5\u30a4\u30af\u30eb\u30dc\u30c3\u30af\u30b9|EXCL_RETURN:50       |legendary|\u9664\u5916\u30ab\u30fc\u30c950%\u3067\u624b\u672d\u306b\u623b\u308aSP0\nhourglass   |\u7802\u6642\u8a08         |REGEN_SP:1 OP_BOOST:10  |rare     |\u6bce\u30bf\u30fc\u30f3SP+1&OP\u7372\u5f97+10%\nsp_collector|SP\u53ce\u96c6\u88c5\u7f6e     |TEMP_SP_REGEN:2:3       |epic     |\u4f7f\u7528:3\u30bf\u30fc\u30f3\u6bce\u30bf\u30fc\u30f3SP+2\n\n[ITEM]\n# id|name|tags|cost|type|rarity|desc|battle_use\npot_s  |\u30dd\u30fc\u30b7\u30e7\u30f3(S)   |HEAL:30          |10 |heal    |common   |HP+30\u56de\u5fa9|1\npot_m  |\u30dd\u30fc\u30b7\u30e7\u30f3(M)   |HEAL:50          |16 |heal    |common   |HP+50\u56de\u5fa9|1\npot_l  |\u30dd\u30fc\u30b7\u30e7\u30f3(L)   |HEAL:70          |22 |heal    |rare     |HP+70\u56de\u5fa9|1\npot_xl |\u30dd\u30fc\u30b7\u30e7\u30f3(XL)  |HEAL:150         |45 |heal    |epic     |HP+150\u56de\u5fa9|1\neth_s  |\u30a8\u30fc\u30c6\u30eb(S)     |RESTORE_SP:2     |12 |sp      |common   |SP+2\u56de\u5fa9|1\neth_l  |\u30a8\u30fc\u30c6\u30eb(L)     |RESTORE_SP:5     |25 |sp      |rare     |SP+5\u56de\u5fa9|1\nop_fil |\u30aa\u30fc\u30d0\u30fc\u30a8\u30ca\u30b8\u30fc |RESTORE_OP:50    |40 |op      |epic     |OP+50\u30c1\u30e3\u30fc\u30b8|1\nop_max |\u30d1\u30fc\u30d5\u30a7\u30af\u30c8\u30b3\u30a2 |RESTORE_OP:100   |90 |op      |legendary|OP\u5168\u5feb|1\nsp_col |SP\u53ce\u96c6          |TEMP_SP_REGEN:2:3|35 |buff    |epic     |3\u30bf\u30fc\u30f3\u6bce\u30bf\u30fc\u30f3SP+2|1\ncore   |\u9650\u754c\u7a81\u7834\u30b3\u30a2    |PASSIVE_SLOT:1   |60 |core    |legendary|\u30d1\u30c3\u30b7\u30d6\u67a0+1|0\nbomb_s |\u624b\u69b4\u5f3e          |BOMB:0.5         |18 |atk     |common   |\u30d5\u30ed\u30a2\u00d70.5\u306e\u78ba\u5b9a\u30c0\u30e1\u30fc\u30b8\uff08\u5fc5\u4e2d\uff09|1\nbomb_m |\u7206\u5f3e            |BOMB:1.0         |35 |atk     |rare     |\u30d5\u30ed\u30a2\u00d71.0\u306e\u78ba\u5b9a\u30c0\u30e1\u30fc\u30b8\uff08\u5fc5\u4e2d\uff09|1\nbomb_l |\u5927\u7206\u5f3e          |BOMB:2.0         |70 |atk     |epic     |\u30d5\u30ed\u30a2\u00d72.0\u306e\u78ba\u5b9a\u30c0\u30e1\u30fc\u30b8\uff08\u5fc5\u4e2d\uff09|1\nbomb_xl|\u8d77\u7206\u7b26\u300c\u65ad\u754c\u7206\u5f3e\u300d|BOMB:4.0       |150|atk     |legendary|\u30d5\u30ed\u30a2\u00d74.0\u306e\u78ba\u5b9a\u30c0\u30e1\u30fc\u30b8\uff08\u5fc5\u4e2d\uff09|1\nofuda  |\u304a\u672d            |BOMB:1.5         |0  |atk     |rare     |\u30d5\u30ed\u30a2\u00d71.5\u306e\u78ba\u5b9a\u30c0\u30e1\u30fc\u30b8\uff08\u5fc5\u4e2d\u30fb\u970a\u5922\u5c02\u7528\uff09|1\nmat_poison|\u6bd2\u306e\u80de\u5b50     |STATUS:POISON:70:3|20|material|common   |\u5408\u6210\u5c02\u7528\u3002\u6bd2\u4ed8\u4e0e\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_burn  |\u71c3\u713c\u306e\u7a2e\u706b   |STATUS:BURN:60:2 |22 |material|common   |\u5408\u6210\u5c02\u7528\u3002\u71c3\u713c\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_freeze|\u6c37\u7d50\u306e\u6b20\u7247   |STATUS:FREEZE:60:2|24|material|rare     |\u5408\u6210\u5c02\u7528\u3002\u6c37\u7d50\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_break |\u7834\u7815\u306e\u7d50\u6676   |BREAK:6          |35 |material|rare     |\u5408\u6210\u5c02\u7528\u3002\u30d6\u30ec\u30a4\u30af\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_buff  |\u95d8\u6c17\u306e\u5b9d\u73e0   |BUFF_ATK:40      |28 |material|rare     |\u5408\u6210\u5c02\u7528\u3002ATK\u30d0\u30d5\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_drain |\u751f\u547d\u306e\u96eb     |DRAIN:25         |30 |material|epic     |\u5408\u6210\u5c02\u7528\u3002\u751f\u547d\u5438\u53ce\u52b9\u679c\u3092\u8ffd\u52a0|0\nmat_fast  |\u75be\u98a8\u306e\u7fbd\u6839   |FAST             |40 |material|epic     |\u5408\u6210\u5c02\u7528\u3002\u5373\u653b(FAST)\u3092\u8ffd\u52a0|0\nmat_excl  |\u5c01\u5370\u306e\u9396     |EXCLUDE          |45 |material|epic     |\u5408\u6210\u5c02\u7528\u3002\u9664\u5916(EXCLUDE)\u3092\u8ffd\u52a0|0\nmat_trigger|\u9023\u9396\u306e\u6838   |TRIGGER:HIT:BUFF_ATK:15|50|material|legendary|\u5408\u6210\u5c02\u7528\u3002\u30d2\u30c3\u30c8\u6642ATK\u30d0\u30d5\u30c8\u30ea\u30ac\u30fc\u3092\u8ffd\u52a0|0\n\n[SPELLCARD]\n# id|name|type|power|buff|hits|perAil|rarity|desc|source\nsc0|\u5f3e\u7b26\u300c\u5f3e\u5e55\u30d0\u30ec\u30c3\u30c8\u300d|SINGLE|10|0|1|0|common|\u5358\u4f5310\u500d|drop\nsc1|\u6563\u7b26\u300c\u62e1\u6563\u5f3e\u5e55\u300d|MULTI|6|0|3|0|common|3\u90236\u500d|drop\nsc2|\u6c17\u7b26\u300c\u899a\u9192\u89e3\u653e\u300d|SELFBUFF|5|100|1|0|common|ATK+100%\u5f8c5\u500d|drop\nsc3|\u96f7\u7b26\u300c\u96fb\u5149\u77f3\u706b\u300d|SINGLE|14|0|1|0|rare|\u5358\u4f5314\u500d\u306e\u96f7\u6483|drop\nsc4|\u6c37\u7b26\u300c\u30b3\u30fc\u30eb\u30c9\u30d6\u30e9\u30b9\u30c8\u300d|MULTI|5|0|5|0|rare|5\u90235\u500d|drop\nsc5|\u708e\u7b26\u300c\u30d5\u30ec\u30a4\u30e0\u30d0\u30fc\u30b9\u30c8\u300d|SELFBUFF|7|80|1|0|rare|ATK+80%\u5f8c7\u500d|drop\nsc_e1|\u5947\u8de1\u300c\u30b9\u30bf\u30fc\u30c0\u30b9\u30c8\u30ec\u30f4\u30a1\u30ea\u30a8\u300d|SELFBUFF|10|100|1|0|epic|ATK+100%(3t)\u5f8c10\u500d|drop\nsc_e2|\u6bd2\u7b26\u300c\u30dd\u30a4\u30ba\u30f3\u30d6\u30ec\u30a4\u30ab\u30fc\u300d|FULLBREAK|10|0|1|5|epic|10\u500d+\u72b6\u614b\u7570\u5e38\u00d75\u500d|drop\nsc_e3|\u604b\u7b26\u300c\u30de\u30b9\u30bf\u30fc\u30b9\u30d1\u30fc\u30af\u300d|SINGLE|20|0|1|0|epic|\u5358\u4f5320\u500d|drop\nsc_e4|\u98a8\u7b26\u300c\u30b5\u30a4\u30af\u30ed\u30f3\u30d6\u30ec\u30fc\u30c9\u300d|MULTI|8|0|5|0|epic|5\u90238\u500d=\u8a0840\u500d|drop\nsc_e5|\u970a\u7b26\u300c\u970a\u529b\u5927\u7206\u767a\u300d|SELFBUFF|12|150|1|0|epic|ATK+150%\u5f8c12\u500d|drop\nsc_e6|\u6ec5\u7b26\u300c\u30c7\u30b9\u30c8\u30e9\u30af\u30b7\u30e7\u30f3\u30d6\u30ec\u30a4\u30af\u300d|FULLBREAK|12|0|1|8|epic|12\u500d+\u72b6\u614b\u7570\u5e38\u00d78\u500d|drop\nsc_l1|\u5922\u60f3\u300c\u5c01\u5370\u89e3\u653e\u300d|SELFBUFF|15|200|1|0|legendary|ATK+200%(5t)\u5f8c15\u500d|drop\nsc_l2|\u300c\u7d42\u7109\u306e\u5f3e\u5e55\u300d|FULLBREAK|15|0|1|10|legendary|15\u500d+\u72b6\u614b\u7570\u5e38\u00d710\u500d|drop\nsc_l3|\u7981\u5f3e\u300c\u30b9\u30bf\u30fc\u30c0\u30b9\u30c8\u30ea\u30d0\u30fc\u30bb\u30a4\u30f3\u30c8\u300d|SINGLE|25|0|1|0|legendary|\u5fc5\u4e2d25\u500d|drop\nsc_l4|\u5929\u7b26\u300c\u30b0\u30e9\u30f3\u30c9\u30af\u30ed\u30b9\u300d|MULTI|12|0|7|0|legendary|7\u902312\u500d|drop\nsc_l5|\u795e\u7b26\u300c\u795e\u6483\u30fb\u5b87\u5b99\u8ad6\u300d|SELFBUFF|20|300|1|0|legendary|ATK+300%\u5f8c20\u500d|drop\nsc_l6|\u300c\u4e07\u7269\u7d42\u7109\u306e\u4e00\u6483\u300d|FULLBREAK|20|0|1|15|legendary|20\u500d+\u72b6\u614b\u7570\u5e38\u00d715\u500d|drop\nsc_l7|\u5e7b\u7b26\u300c\u5922\u5e7b\u6ce1\u5f71\u300d|SELFBUFF|18|250|1|0|legendary|ATK+250%(4t)\u5f8c18\u500d|drop\nsc_l8|\u8987\u7b26\u300c\u5b87\u5b99\u5236\u8987\u30b9\u30da\u30af\u30bf\u30af\u30eb\u300d|MULTI|15|0|5|0|legendary|5\u902315\u500d|drop\nsc_m1|\u3010\u795e\u8a71\u3011\u795e\u8a71\u300c\u30a2\u30eb\u30c6\u30a3\u30e1\u30c3\u30c8\u30b9\u30d1\u30fc\u30af\u300d|SINGLE|40|0|1|0|mystic|\u30dc\u30b9\u9650\u5b9a\u3002\u5fc5\u4e2d40\u500d|boss\nsc_m2|\u3010\u795e\u8a71\u3011\u7d42\u7109\u300c\u30b8\u30e3\u30c3\u30b8\u30e1\u30f3\u30c8\u30c7\u30a4\u300d|FULLBREAK|25|0|1|20|mystic|\u30dc\u30b9\u9650\u5b9a\u300225\u500d+\u7570\u5e38\u00d720\u500d|boss\nsc_m3|\u3010\u795e\u8a71\u3011\u5275\u9020\u300c\u30d3\u30c3\u30b0\u30d0\u30f3\u30b8\u30a7\u30cd\u30b7\u30b9\u300d|SELFBUFF|30|400|1|0|mystic|\u30dc\u30b9\u9650\u5b9a\u3002ATK+400%\u5f8c30\u500d|boss\n";
 </script>
 <script>
+// feature: persistent-for-this-session settings (deliberately kept OUTSIDE the G object,
+// since G is fully reassigned on every new game via initG() - these should survive that).
+const GAME_SETTINGS={effects:true,floorWait:true,adminMode:false};
+const ADMIN_PASSWORD='sakuya';// simple session gate - this is a local single-player game, not real security
+window.ACTIVE_ASCENSIONS=[];
+
+// FIX(balance): Normal and above were reported as overall too punishing. Base curves
+// softened here; extra challenge is now opt-in via the Ascension system (see ASCENSIONS)
+// instead of being baked hard into the base difficulties.
 const DIFF={
   easy:   {slots:2,hpM:.2, atkM:.12,shopM:.5, opM:1.5,initCP:500,coreRule:'boss5',  curseRate:0,   firstG:false,eDrop:.2,  floorRareMul:.08},
-  normal: {slots:1,hpM:1.0,atkM:1.0,shopM:1.0,opM:1.0,initCP:200,coreRule:'boss10', curseRate:.2,  firstG:false,eDrop:.1,  floorRareMul:.06},
-  hard:   {slots:1,hpM:1.5,atkM:1.5,shopM:1.5,opM:.8, initCP:50, coreRule:'shop',   curseRate:.35, firstG:false,eDrop:.05, floorRareMul:.04},
-  lunatic:{slots:1,hpM:3.0,atkM:2.5,shopM:2.5,opM:.6, initCP:0,  coreRule:'special',curseRate:1.0, firstG:true, eDrop:.01, floorRareMul:.02},
+  normal: {slots:1,hpM:.85,atkM:.85,shopM:1.0,opM:1.0,initCP:220,coreRule:'boss10', curseRate:.2,  firstG:false,eDrop:.1,  floorRareMul:.06},
+  hard:   {slots:1,hpM:1.25,atkM:1.25,shopM:1.35,opM:.85,initCP:90, coreRule:'shop',   curseRate:.35, firstG:false,eDrop:.05, floorRareMul:.04},
+  lunatic:{slots:1,hpM:2.3,atkM:2.0,shopM:2.2,opM:.65, initCP:20,  coreRule:'special',curseRate:1.0, firstG:true, eDrop:.01, floorRareMul:.02},
 };
+// feature: Ascension system - optional, stackable modifiers you can toggle on for extra
+// challenge (and to give the base difficulties room to breathe). Since this artifact has
+// no persistent storage, these can't be "unlocked by clearing" across sessions - they're
+// available to enable freely from the start screen instead.
+const ASCENSIONS=[
+  {id:'a1',name:'敵HP+20%',desc:'すべての敵のHPが20%増加する',hpMul:1.2},
+  {id:'a2',name:'ショップ価格高騰',desc:'ショップの価格が40%上昇する',shopMul:1.4},
+  {id:'a3',name:'初期SP-1',desc:'開始時の最大SPが1減る',spDelta:-1},
+  {id:'a4',name:'敵の攻撃力増加',desc:'すべての敵の攻撃力が20%増加する',atkMul:1.2},
+];
 const STNAMES={POISON:'毒',BURN:'燃焼',FREEZE:'氷結',STUN:'気絶',WEAKEN:'弱体',BLEED:'出血',SILENCE:'沈黙',BREAK_OPEN:'無防備',ATK_BUFF:'ATKバフ',SURE:'必中',DEF_DOWN:'防御↓'};
 const AILMENTS=['POISON','BURN','FREEZE','STUN','WEAKEN','BLEED','SILENCE'];
 let SKILL_DB=[],PASSIVE_DB=[],ENEMY_DB=[],SC_DB=[],RELIC_DB=[],ITEM_DB=[];
@@ -460,8 +523,12 @@ function mergeTags(ta,tb){
        t.type==='TRIGGER'?(x.event===t.event&&x.effect===t.effect):
        true));
     if(ex){
-      if(['ATK','BUFF_ATK','BUFF_ATK_PERM'].includes(ex.type)){ex.val=softAdd(ex.val,t.val);ex.raw=ex.type+':'+ex.val;}
-      else if(ex.type==='HIT'){ex.val+=t.val;ex.raw='HIT:'+ex.val;}
+      // FIX: repeated re-synthesis (feeding a synthesized card back into another synthesis,
+      // over and over) had NO ceiling on ATK or HIT - HIT in particular just added straight,
+      // uncapped, every merge. That's how a 5-SP card could end up dealing millions of
+      // damage. Both are now hard-capped regardless of how many times a card gets re-merged.
+      if(['ATK','BUFF_ATK','BUFF_ATK_PERM'].includes(ex.type)){ex.val=Math.min(60,softAdd(ex.val,t.val));ex.raw=ex.type+':'+ex.val;}
+      else if(ex.type==='HIT'){ex.val=Math.min(20,ex.val+t.val);ex.raw='HIT:'+ex.val;}
       else if(ex.type==='STATUS'){ex.dur=Math.max(ex.dur,t.dur);ex.rate=Math.min(100,ex.rate+Math.floor(t.rate*.5));ex.raw=`STATUS:${ex.name}:${ex.rate}:${ex.dur}`;}
       else if(ex.type==='TRIGGER'){ex.val=+(ex.val+t.val).toFixed(2);ex.raw=`TRIGGER:${ex.event}:${ex.effect}:${ex.val}`;}
       // FIX: ATTR is a string (element name like '斬'), not a number - the old generic
@@ -580,12 +647,17 @@ function tryLvUp(){
 let G={};
 function initG(diff){
   const cfg=DIFF[diff];
+  // feature: active Ascension modifiers (chosen at the title screen) apply here
+  const asc=(window.ACTIVE_ASCENSIONS||[]).map(id=>ASCENSIONS.find(a=>a.id===id)).filter(Boolean);
+  const spDelta=asc.reduce((s,a)=>s+(a.spDelta||0),0);
+  const startSp=Math.max(1,8+spDelta);
   G={diff,floor:1,turn:0,scPickRR:false,skPickRR:false,prevScr:null,
     synthA:null,synthB:null,synthFree:false,passIdleBonus:false,
     tempSpRegen:0,tempSpRegenVal:0,
+    ascensions:asc.map(a=>a.id),
     bs:{atkMult:1.0,critRate:5},
     battle:{deck:[],hand:[],discard:[],excluded:[],handSize:4,playerActed:false,idleLastTurn:false},
-    p:{name:'プレイヤー',lv:1,exp:0,hp:100,maxHp:100,sp:8,maxSp:8,op:0,maxOp:100,// FIX(balance): starting SP 6→8
+    p:{name:'プレイヤー',lv:1,exp:0,hp:100,maxHp:100,sp:startSp,maxSp:startSp,op:0,maxOp:100,
        atk:30,cp:cfg.initCP,statusList:[],items:[],passiveSlotMax:cfg.slots,
        passives:[],passiveInv:[],skills:[],spellcard:null,relics:[],shields:[]},
     enemy:null,lastWin:false,pendBossSc:false,
@@ -593,6 +665,10 @@ function initG(diff){
   };
   if(diff!=='lunatic'&&PASSIVE_DB.length>0){const p=clone(PASSIVE_DB[0]);if(p){p.uid='p0';G.p.passives=[p];}}
 }
+// feature: applies active Ascension multipliers on top of the difficulty's own hpM/atkM
+function ascHpMul(){return(G.ascensions||[]).reduce((m,id)=>{const a=ASCENSIONS.find(x=>x.id===id);return m*(a&&a.hpMul||1);},1);}
+function ascAtkMul(){return(G.ascensions||[]).reduce((m,id)=>{const a=ASCENSIONS.find(x=>x.id===id);return m*(a&&a.atkMul||1);},1);}
+function ascShopMul(){return(G.ascensions||[]).reduce((m,id)=>{const a=ASCENSIONS.find(x=>x.id===id);return m*(a&&a.shopMul||1);},1);}
 function clone(o){return JSON.parse(JSON.stringify(o));}
 
 function getSkSP(sk){
@@ -613,8 +689,8 @@ function spawnEnemy(fl,diff,isBoss){
   // Hard/Lunatic: exponential growth so a coherent deck build is required to keep pace.
   const fm=diff==='easy'?1+0.08*Math.sqrt(fl):diff==='normal'?1+0.15*Math.sqrt(fl):diff==='hard'?Math.pow(1+fl/40,1.4):Math.pow(1+fl/30,1.8);
   const lf1=(diff==='lunatic'&&fl===1);
-  const hp=Math.floor((lf1?50000:base.hp)*fm*cfg.hpM*(isBoss?2:1));
-  const atk=Math.floor((lf1?base.atk*.3:base.atk)*fm*cfg.atkM*(isBoss?1.6:1));
+  const hp=Math.floor((lf1?50000:base.hp)*fm*cfg.hpM*ascHpMul()*(isBoss?2:1));
+  const atk=Math.floor((lf1?base.atk*.3:base.atk)*fm*cfg.atkM*ascAtkMul()*(isBoss?1.6:1));
   // FIX (bug): CP rewards were never scaled with floor, unlike HP/ATK, so income flatlined
   // while shop/synth costs kept rising with G.floor - the run would go CP-broke and stay
   // that way. CP now grows on a gentle, independent curve so it keeps flowing all game.
@@ -771,6 +847,11 @@ function reviveIfCharm(){
     G.p.hp=1;
     addLog('✦ 身代わりの御守が発動！HP1で耐えた！（レリック消失）','sc');
     G.p.relics=G.p.relics.filter(r=>r!=='charm');
+    // FIX: make the save impossible to miss/mistake for a death - a big full-screen flash
+    // with text, not just a log line easy to scroll past.
+    const f=document.createElement('div');f.className='charmflash';
+    f.innerHTML='<span>✦ 身代わりの御守 発動！ HP1で耐えた！</span>';
+    document.body.appendChild(f);setTimeout(()=>f.remove(),1150);
   }
 }
 function hitPlayer(rawDmg){
@@ -829,6 +910,15 @@ function playCard(uid){
   if(actualExcl)bd.excluded.push(card);else bd.discard.push(card);
   function finishPlay(){
     if(isFast){
+      // FIX: defensive circuit-breaker against any FAST+draw combo (e.g. two copies of a
+      // 0/low-cost FAST-draw card in a small deck) chaining indefinitely without ever
+      // ending the turn. After 20 FAST plays in a single turn, the turn is force-ended.
+      bd.fastChainCount=(bd.fastChainCount||0)+1;
+      if(bd.fastChainCount>=20){
+        addLog('⚡連続行動が上限に達した！強制的にターン終了。','ea');
+        bd.playerActed=true;checkCursedHand();updateBUI();if(!checkEnd())setTimeout(enemyTurn,450);
+        return;
+      }
       const f=document.createElement('div');f.className='fastflash';document.body.appendChild(f);setTimeout(()=>f.remove(),300);
       addLog(`⚡${card.name}[即攻]！ターンを消費せず続けて行動できる。`,'sy');
       updateBUI();checkEnd();
@@ -916,7 +1006,7 @@ function execCardTags(tags,nm){
   if(shT){G.p.shields=G.p.shields||[];G.p.shields.push({attr:'特',hp:shT.val,maxHp:shT.val});addLog(`🛡 バリア(HP${shT.val})を展開！`,'sy');}
   // feature: explicit draw effect (replaces the old "FAST always draws 1" shortcut)
   const drT=tags.find(t=>t.type==='DRAW');
-  if(drT){drawCards(drT.val);addLog(`🃏 カードを${drT.val}枚ドロー！`,'sy');}
+  if(drT){const got=drawCards(drT.val);if(got>0)addLog(`🃏 カードを${got}枚ドロー！`,'sy');else addLog('🃏 山札も捨て札も空でドローできなかった…','sy');}
   // Remove own status ailments if SURE tag present (for 壊れた懐中時計)
   if(tags.find(t=>t.type==='SURE')){G.p.statusList=G.p.statusList.filter(s=>!AILMENTS.includes(s.name));addSt(G.p,'SURE',1,1);addLog('状態異常解除+次の攻撃必中！','sy');}
   if(atkT||hitT){
@@ -1021,6 +1111,7 @@ function startNewPlayerTurn(){
   G.battle.playerActed=false;applyRegens();
   const extra=G.battle.idleLastTurn?1:0;G.battle.idleLastTurn=false;
   if(G.enemy)G.enemy.dmgTakenThisTurn=0;// feature: 結界(warded) build's per-turn damage cap resets each player turn
+  G.battle.fastChainCount=0;// FIX: reset the FAST-chain circuit-breaker each new turn
   drawToFill(extra);updateBUI();checkEnd();
 }
 
@@ -1065,6 +1156,7 @@ function castSpellcard(){
   }
 }
 function showDanmaku(name,dmg,isPlayer,scType){
+  if(!GAME_SETTINGS.effects)return;// feature: settings toggle for visual effects
   const ol=document.getElementById('dmk-ol');const canvas=document.getElementById('dmk-canvas');
   canvas.width=window.innerWidth;canvas.height=window.innerHeight;
   const ctx=canvas.getContext('2d');const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2;
@@ -1111,12 +1203,17 @@ function initBDeck(){
   drawToFill((bsd>0?Math.floor(bsd):0)+tempBonus);
 }
 function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
+// FIX: drawCards() never reported how many cards it actually drew, so a DRAW-tag card
+// would claim "drew 2 cards" even when the deck AND discard pile were both empty (a small/
+// compressed deck) and nothing was actually drawn. Now returns the real count.
 function drawCards(n){
   const bd=G.battle;
+  let drawn=0;
   for(let i=0;i<n;i++){
     if(!bd.deck.length){if(!bd.discard.length)break;bd.deck=[...bd.discard];bd.discard=[];shuffle(bd.deck);addLog('山札を再シャッフルした','sy');}
-    if(bd.deck.length)bd.hand.push(bd.deck.pop());
+    if(bd.deck.length){bd.hand.push(bd.deck.pop());drawn++;}
   }
+  return drawn;
 }
 function drawToFill(extra=0){const n=(G.battle.handSize+getDrawP()+extra)-G.battle.hand.length;if(n>0)drawCards(n);}
 
@@ -1148,6 +1245,7 @@ function checkEnd(){
     if(core){p.passiveSlotMax=Math.min(5,p.passiveSlotMax+1);addLog('限界突破コア！パッシブ枠+1','sc');}
     // FIX/feature: relics now occasionally drop from bosses too, not just the shop.
     // Boss-exclusive relics (BOSS_ONLY_RELICS) can ONLY be earned this way.
+    let droppedRelic=null;
     if(e.isBoss){
       const relicPool=RELIC_DB.filter(r=>r.rarity!=='mystic'&&!p.relics.includes(r.id));
       if(relicPool.length&&Math.random()<0.35){
@@ -1155,8 +1253,15 @@ function checkEnd(){
         const pick=(exclusive.length&&Math.random()<0.5)?exclusive[Math.floor(Math.random()*exclusive.length)]:relicPool[Math.floor(Math.random()*relicPool.length)];
         p.relics.push(pick.id);
         addLog(`✦ ボスがレリック「${pick.name}」を落とした！`,'sc');
+        droppedRelic=pick;
       }
     }
+    // FIX: relic drops used to only be logged to the battle log, which becomes invisible
+    // once the result screen replaces the battle screen. Now shown explicitly on the result
+    // screen itself so it can't be missed.
+    const relicBox=document.getElementById('res-relic-box');
+    if(droppedRelic){relicBox.style.display='block';document.getElementById('res-relic-txt').textContent=`「${droppedRelic.name}」（${droppedRelic.rarity}）を入手！`;}
+    else relicBox.style.display='none';
     G.lastWin=true;G.pendBossSc=e.isBoss;
     G.rec.maxFloor=Math.max(G.rec.maxFloor||0,G.floor);saveMF();
     document.getElementById('res-t').textContent='VICTORY';document.getElementById('res-t').className='res-t res-win';
@@ -1269,6 +1374,8 @@ function nextFloor(){
   G.floor++;const t=getFloorType(G.floor);
   const info={boss:{icon:'💀',label:'💀 BOSS',desc:`F${G.floor} ボス`,rar:'epic'},shop:{icon:'🏘',label:'🏘 休憩所',desc:'回復・合成・ショップ',rar:'common'},event:{icon:'❔',label:'❔ イベント',desc:`F${G.floor} 未知の遭遇`,rar:'rare'},normal:{icon:'⚔',label:'⚔ 戦闘',desc:`F${G.floor} 通常戦闘`,rar:'common'}}[t];
   _nxtType=t;
+  // feature: settings toggle for the floor-transition wait screen
+  if(!GAME_SETTINGS.floorWait){execNext();return;}
   document.getElementById('nxt-lbl').textContent=`Floor ${G.floor}`;
   document.getElementById('nxt-icon').textContent=info.icon;document.getElementById('nxt-type').textContent=info.label;
   document.getElementById('nxt-desc').textContent=info.desc;
@@ -1281,7 +1388,22 @@ function execNext(){
   if(_nxtTimer){clearInterval(_nxtTimer);_nxtTimer=null;}
   if(_nxtType==='boss')startBattle(true,false);
   else if(_nxtType==='shop'){updateTownUI();showScr('town');}
-  else if(_nxtType==='event'){showEvent(Math.random()<0.3,()=>nextFloor());}
+  else if(_nxtType==='event'){
+    // feature: mushroom card matures after being carried through 3 events.
+    const shroom=G.p.skills.find(s=>s.name==='怪しいキノコ');
+    if(shroom){
+      shroom._mushroomCount=(shroom._mushroomCount||0)+1;
+      if(shroom._mushroomCount>=3){
+        G.p.skills=G.p.skills.filter(s=>s.uid!==shroom.uid);
+        G.p.cp+=600;
+        addLog('🍄 怪しいキノコが成熟し、600CPに化けた！','sc');
+        // NOTE: this fires before the event popup itself, so it wouldn't be caught by the
+        // event-result confirmation - alert() here instead, so it's never missed.
+        alert('🍄 怪しいキノコが成熟し、600CPに化けた！');
+      }
+    }
+    showEvent(Math.random()<0.3,()=>nextFloor());
+  }
   else startBattle(false,false);
 }
 
@@ -1404,11 +1526,18 @@ function skipSkPick(){if(_skCB){const cb=_skCB;_skCB=null;cb();}}
 function rerollSkPick(){if(_skRR)return;_skRR=true;window._skCh=pickByRarity(SKILL_DB.filter(s=>s.source!=='boss'),getFloorRW(),3);document.getElementById('sk-cards').innerHTML=window._skCh.map((sk,i)=>skPickCard(sk,i)).join('');document.getElementById('sk-rr').style.display='none';}
 
 let _ppCB=null;
-function showPassPick(cb){
+// FIX: the "old scroll" event promised an Epic-only passive, but showPassPick() always
+// pulled from the full floor-weighted rarity pool regardless - now takes an optional
+// rarity filter so an event can genuinely restrict the offer to a specific rarity.
+function showPassPick(cb,rarityFilter){
   _ppCB=cb;
-  const pool=PASSIVE_DB.filter(p=>!G.p.passives.find(q=>q.id===p.id));
+  let pool=PASSIVE_DB.filter(p=>!G.p.passives.find(q=>q.id===p.id));
+  if(rarityFilter)pool=pool.filter(p=>p.rarity===rarityFilter);
   if(!pool.length){cb&&cb();return;}
-  const ch=pickByRarity(pool,getFloorRW(),3);window._ppCh=ch;
+  let ch;
+  if(rarityFilter){const cp=[...pool];shuffle(cp);ch=cp.slice(0,3);}
+  else ch=pickByRarity(pool,getFloorRW(),3);
+  window._ppCh=ch;
   const canAdd=G.p.passives.length<G.p.passiveSlotMax;
   document.getElementById('pp-ttl').textContent=canAdd?'パッシブ習得（追加）':'パッシブ習得（交換）';
   document.getElementById('pp-list').innerHTML=ch.map((p,i)=>`<div class="pp-card" onclick="pickPassive(${i})"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:.88rem;font-weight:700;color:${p.rarity==='mystic'?'var(--mys)':'inherit'}">${p.name}</span><span class="nr ${rarCls(p.rarity)}">${p.rarity}</span></div><div style="font-size:.74rem;color:var(--t2)">${p.desc}</div></div>`).join('');
@@ -1540,8 +1669,19 @@ function pickCursedCard(i){
 
 // ── RICH EVENTS ──
 const EV_ALL=[
-  {icon:'🍄',title:'怪しいキノコ',desc:'奇妙に輝くキノコを発見。摂取すると未知の力が宿るかもしれない…',opts:['食べる（HP-30、Mysticスキル入手）','やめておく'],
-   fn:(i,cb)=>{if(i===0){G.p.hp=Math.max(1,G.p.hp-30);const mys=SKILL_DB.filter(s=>s.rarity==='mystic');if(mys.length){const sk=clone(mys[Math.floor(Math.random()*mys.length)]);sk.uid=sk.id+'_'+Date.now();G.p.skills.push(sk);addLog(`🍄 HP-30…${sk.name}を習得！`,'sc');}else addLog('何も起きなかった…','sy');}cb();}},
+  // FIX/redesign: red_mushroom used to be a RELIC (pointlessly leaking into the shop's
+  // relic rotation despite being marked event-only). It's now a genuine cursed junk card:
+  // unplayable (SP99), clogs your deck - but if you carry it through 3 more events without
+  // discarding it, it matures and auto-sells for 600 CP.
+  {icon:'🍄',title:'怪しいキノコ',desc:'奇妙に輝くキノコを発見。持ち帰ると育つかもしれない…',opts:['持ち帰る（デッキに「怪しいキノコ」が加わる。使用不可。3回イベントを経ると600CPに化ける）','やめておく'],
+   fn:(i,cb)=>{
+     if(i===0){
+       const shroom={id:9998,uid:'mushroom_'+Date.now(),name:'怪しいキノコ',tags:'ATTR:毒 NOOP',sp:99,rarity:'common',desc:'使用不可（SP99）。デッキを圧迫するだけ…だが3回イベントを経ると化けるという噂も。',source:'curse',_mushroomCount:0};
+       G.p.skills.push(shroom);
+       addLog('🍄 「怪しいキノコ」をデッキに持ち帰った…','sy');
+     }
+     cb();
+   }},
   {icon:'🎰',title:'賭博師の挑戦',desc:'謎の賭博師が現れた。「コインを投げろ。表なら儲けもの、裏なら授業料だ」',opts:['50CP賭ける（表:+100CP / 裏:-50CP）','100CP賭ける（表:+250CP / 裏:-100CP）','断る'],
    fn:(i,cb)=>{if(i<2){const win=Math.random()<.5;const[bet,gain]=[i===0?50:100,i===0?100:250];if(G.p.cp>=bet||win){if(win){G.p.cp+=gain;addLog(`🎰 表！+${gain}CP！`,'sc');}else{G.p.cp=Math.max(0,G.p.cp-bet);addLog(`🎰 裏…-${bet}CP`,'ea');}}else addLog('CP不足…','sy');}cb();}},
   {icon:'📦',title:'隙間の宝箱',desc:'どこからともなく出現した宝箱。罠かもしれない…',opts:['慎重に開ける（50%でアイテム）','魔力でこじ開ける（SP-3、確実にレアアイテム）','立ち去る'],
@@ -1556,7 +1696,7 @@ const EV_ALL=[
   {icon:'⛩',title:'神社の賽銭箱',desc:'小さな神社を発見。賽銭を入れると運が開けるかもしれない…',opts:['50CP奉納（次の戦闘：手札+1）','100CP奉納（パッシブを1つ選べる）','素通りする'],
    fn:(i,cb)=>{if(i===0&&G.p.cp>=50){G.p.cp-=50;G.tempHandBonus=1;addLog('⛩ 神の加護！次戦の開始手札+1','sc');cb();}else if(i===1&&G.p.cp>=100){G.p.cp-=100;showPassPick(cb);}else cb();}},
   {icon:'📜',title:'古びた巻物',desc:'読むと知識が得られそうだ。しかし呪いが込められているかもしれない…',opts:['解読する（Epicパッシブを1つ習得、呪い付与20%）','持ち帰る（アイテムとして入手）','捨てる'],
-   fn:(i,cb)=>{if(i===0){showPassPick(()=>{if(Math.random()<.2&&G.p.skills.length>0){const sk=G.p.skills[Math.floor(Math.random()*G.p.skills.length)];sk.tags=(sk.tags+' CURSE_DMG:5').trim();addLog('⚠ 呪いが付与された！','ea');}cb();});}else if(i===1){const it=clone(ITEM_DB[Math.floor(Math.random()*ITEM_DB.length)]);it.uid='sc_'+Date.now();G.p.items.push(it);addLog(`📦 ${it.name}を入手！`,'sy');cb();}else cb();}},
+   fn:(i,cb)=>{if(i===0){showPassPick(()=>{if(Math.random()<.2&&G.p.skills.length>0){const sk=G.p.skills[Math.floor(Math.random()*G.p.skills.length)];sk.tags=(sk.tags+' CURSE_DMG:5').trim();addLog('⚠ 呪いが付与された！','ea');}cb();},'epic');}else if(i===1){const it=clone(ITEM_DB[Math.floor(Math.random()*ITEM_DB.length)]);it.uid='sc_'+Date.now();G.p.items.push(it);addLog(`📦 ${it.name}を入手！`,'sy');cb();}else cb();}},
   // FIX: previously always silently targeted skills[0] with no indication of which card
   // was affected. Now the player explicitly picks the target skill for each option.
   {icon:'💡',title:'スキル強化の機会',desc:'謎の力場が発生。持っているスキルを1枚選んで強化できる！',opts:['ATK+0.5強化するスキルを選ぶ','HIT+2強化するスキルを選ぶ（ATK×0.7）','SP-1するスキルを選ぶ（SP3以上限定）','立ち去る'],
@@ -1631,7 +1771,28 @@ function showEvent(rare,cb){
   document.getElementById('ev-opts').innerHTML=ev.opts.map((o,i)=>`<div class="ev-opt" onclick="doEvent(${i})">${o}</div>`).join('');
   showScr('event');
 }
-function doEvent(i){if(_evFn)_evFn(i,()=>{_evFn=null;if(_evCB){const cb=_evCB;_evCB=null;nextFloor();}});}
+// FIX: event choices now show an explicit confirmation of what happened (gambling result,
+// relic/skill received, HP/CP paid, etc.) with a "確認" button, instead of silently jumping
+// to the next floor. If a choice produced no visible outcome, it skips straight through.
+let _evResultCB=null;
+function doEvent(i){
+  if(!_evFn)return;
+  const before=_logBuffer.length;
+  const fn=_evFn;_evFn=null;
+  fn(i,()=>{
+    const msgs=_logBuffer.slice(before);
+    const cb=_evCB;_evCB=null;
+    if(msgs.length){
+      _evResultCB=cb;
+      document.getElementById('ev-result-list').innerHTML=msgs.map(m=>`<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:.85rem">${m}</div>`).join('');
+      document.getElementById('pop-ev-result').classList.add('show');
+    }else if(cb)cb();
+  });
+}
+function confirmEventResult(){
+  document.getElementById('pop-ev-result').classList.remove('show');
+  const cb=_evResultCB;_evResultCB=null;if(cb)cb();
+}
 
 function openFreeCardDelete(cb){
   window._delCB=cb;window._delFree=true;
@@ -1673,18 +1834,32 @@ const SHOP_STOCK_LIMIT=3;// FIX: items/materials could be bought infinitely - no
 function openShop(){
   document.getElementById('shop-cp').textContent=G.p.cp;
   const cfg=DIFF[G.diff];let fm=1+Math.floor(G.floor/5)*.5;
+  fm*=ascShopMul();// feature: Ascension "ショップ価格高騰" modifier
   // Shop discount relic
   const disc=getRelicVal('SHOP_DISCOUNT');fm*=(1-disc/100);
   // FIX: relics/spellcards/materials/items used to ALL be purchasable at once and infinitely -
   // the shop now rolls small, floor-locked random rotations, and repeat-buying scales price up
   // steeply until stock for that item runs out for this visit.
   if(G.shopRelicFloor!==G.floor){
+    // FIX: repeated reports that the relic rotation "never changes" - even though it WAS
+    // re-rolling per floor, with only ~9 relics total and 3 shown, a fresh random draw could
+    // coincidentally repeat most of the previous visit's offer, LOOKING unchanged. The new
+    // offer now explicitly excludes last visit's picks whenever enough others exist to fill
+    // the 3 slots, so consecutive shop visits are guaranteed to look different.
     const avail=RELIC_DB.filter(r=>r.rarity!=='mystic'&&!BOSS_ONLY_RELICS.includes(r.id));
-    const rcp=[...avail];shuffle(rcp);
+    const prevIds=(G.shopRelicOffer||[]).map(r=>r.id);
+    const fresh=avail.filter(r=>!prevIds.includes(r.id));
+    const rcp=fresh.length>=Math.min(3,avail.length)?[...fresh]:[...avail];
+    shuffle(rcp);
     G.shopRelicOffer=rcp.slice(0,Math.min(3,rcp.length));
     const matPool=ITEM_DB.filter(i=>i.type==='material');
     const mcp=[...matPool];shuffle(mcp);
     G.shopMatOffer=mcp.slice(0,Math.min(5,mcp.length));
+    // FIX: the skill shop always showed the same fixed first-8 skills in database order,
+    // never varying. Now a random rotation, floor-locked the same way as everything else.
+    const skPool=SKILL_DB.filter(s=>['common','rare','epic'].includes(s.rarity)&&(s.source==='drop'||s.source==='shop'));
+    const skcp=[...skPool];shuffle(skcp);
+    G.shopSkillOffer=skcp.slice(0,Math.min(8,skcp.length));
     G.shopBuyCount={};
     G.shopRelicFloor=G.floor;
   }
@@ -1694,7 +1869,7 @@ function openShop(){
     const c=Math.floor(it.cost*cfg.shopM*fm*Math.pow(1.45,bought));
     return`<div class="srow" style="${soldOut?'opacity:.4;pointer-events:none':''}" onclick="buyItem('${it.id}',${c})"><div><div style="font-size:.85rem;font-weight:700">${it.name} <span class="nr ${rarCls(it.rarity)}">${it.rarity}</span>${bought?`<span style="font-size:.6rem;color:var(--t3);margin-left:3px">(${bought}/${SHOP_STOCK_LIMIT}購入済)</span>`:''}</div><div style="font-size:.71rem;color:var(--t2)">${it.desc}</div></div><div style="color:var(--a3);font-weight:700">${soldOut?'売切':c+'CP'}</div></div>`;
   }).join('');
-  const sR=SKILL_DB.filter(s=>['common','rare','epic'].includes(s.rarity)&&(s.source==='drop'||s.source==='shop')).slice(0,8).map(sk=>{
+  const sR=(G.shopSkillOffer||[]).map(sk=>{
     const al=G.p.skills.find(s=>s.id===sk.id);const b={common:15,rare:35,epic:90,legendary:200}[sk.rarity]||15;const c=Math.floor(b*cfg.shopM*fm);
     const isShopOnly=sk.source==='shop';
     return`<div class="srow" style="${al?'opacity:.4;pointer-events:none':''}" onclick="buySkill(${sk.id},${c})"><div><div style="font-size:.85rem;font-weight:700">✦ ${sk.name} <span class="nr ${rarCls(sk.rarity)}">${sk.rarity}</span>${isShopOnly?'<span style="font-size:.6rem;color:var(--a3);margin-left:3px">限定</span>':''}</div><div style="font-size:.71rem;color:var(--t2)">${sk.desc} SP:${sk.sp}</div></div><div style="color:var(--a3);font-weight:700">${al?'習得済':c+'CP'}</div></div>`;
@@ -1715,7 +1890,7 @@ function openShop(){
 }
 function openScShop(){
   document.getElementById('scshop-cp').textContent=G.p.cp;
-  const cfg=DIFF[G.diff];let fm=1+Math.floor(G.floor/5)*.5;const disc=getRelicVal('SHOP_DISCOUNT');fm*=(1-disc/100);
+  const cfg=DIFF[G.diff];let fm=1+Math.floor(G.floor/5)*.5;fm*=ascShopMul();const disc=getRelicVal('SHOP_DISCOUNT');fm*=(1-disc/100);
   // FIX: the spellcard shop used to show every eligible spellcard at once - now a random
   // rotation of ~5, floor-locked like the relic/material shop so it varies visit to visit.
   if(G.shopScFloor!==G.floor){
@@ -1803,8 +1978,11 @@ function doSynth(){
     if(b._isMat){mg=mergeTags(parseTags(a.tags),parseTags(b._matTags||''));newSp=a.sp;newRar=a.rarity;newName=`${a.name}+[${b.name}]`;
       const iidx=G.p.items.findIndex(i=>i.uid===b._matUid);if(iidx>=0)G.p.items.splice(iidx,1);}
     else{mg=mergeTags(parseTags(a.tags),parseTags(b.tags));newSp=Math.max(a.sp,b.sp);newRar=highRar(a.rarity,b.rarity);newName=`${a.name}+${b.name}`;}
-    // feature: mutation - rarity+1 tier and a flavor prefix + small numeric bump
-    let mutated=false;
+    // FIX: mutation used to just say "great success!" with no specifics - now the log
+    // and the card's own description spell out exactly what changed (old rarity → new
+    // rarity, and the exact ATK% gained), so the effect isn't a mystery.
+    let mutated=false,mutDesc='';
+    const oldRar=newRar;
     if(Math.random()<MUT_RATE){
       mutated=true;
       const order=['common','rare','epic','legendary','mystic'];
@@ -1812,13 +1990,16 @@ function doSynth(){
       if(idx>=0&&idx<order.length-1)newRar=order[idx+1];
       const prefix=MUT_PREFIXES[Math.floor(Math.random()*MUT_PREFIXES.length)];
       newName=`【変異】${prefix}${newName}`;
-      const atkTag=mg.find(t=>t.type==='ATK');if(atkTag){atkTag.val=+(atkTag.val*1.15).toFixed(2);atkTag.raw='ATK:'+atkTag.val;}
+      const atkTag=mg.find(t=>t.type==='ATK');
+      let atkNote='';
+      if(atkTag){const before=atkTag.val;atkTag.val=Math.min(60,+(atkTag.val*1.15).toFixed(2));atkTag.raw='ATK:'+atkTag.val;atkNote=`、ATK×${before}→×${atkTag.val}`;}
+      mutDesc=newRar!==oldRar?`レア度上昇(${oldRar}→${newRar})${atkNote}`:`威力強化${atkNote}`;
     }
-    const ns={id:9000+Date.now()%999,uid:Date.now()+'_s',name:newName,tags:tagsStr(mg),sp:newSp,rarity:newRar,desc:mutated?'合成スキル（変異：大成功！レア度上昇+威力強化）':'合成スキル',source:'drop',_rc:0,_spR:a._spR||(b._spR||false)};
+    const ns={id:9000+Date.now()%999,uid:Date.now()+'_s',name:newName,tags:tagsStr(mg),sp:newSp,rarity:newRar,desc:mutated?`合成スキル（変異：${mutDesc}）`:'合成スキル',source:'drop',_rc:0,_spR:a._spR||(b._spR||false)};
     G.p.skills=G.p.skills.filter(s=>s.uid!==a.uid);
     if(!b._isMat)G.p.skills=G.p.skills.filter(s=>s.uid!==b.uid);
     G.p.skills.push(ns);G.synthA=null;G.synthB=null;
-    addLog(mutated?`✨✨ 変異発生！『${ns.name}』が生まれた！`:`⚗ ${ns.name}に合成！`,'sy');
+    addLog(mutated?`✨✨ 変異発生！『${ns.name}』が生まれた！（${mutDesc}）`:`⚗ ${ns.name}に合成！`,'sy');
     updateSynthUI();
   }catch(err){
     if(!G.synthFree)G.p.cp+=c;// refund on failure
@@ -2023,10 +2204,12 @@ function buildTip(card){
   document.getElementById('tip-desc').textContent=card.desc||'';document.getElementById('tip-auto').textContent=autoDesc(tags);
 }
 function showBreakFlash(){
+  if(!GAME_SETTINGS.effects)return;
   const f=document.createElement('div');f.className='brflash';document.body.appendChild(f);setTimeout(()=>f.remove(),500);
   const t=document.createElement('div');t.className='brtxt';t.textContent='BREAK!!';document.body.appendChild(t);setTimeout(()=>t.remove(),800);
 }
 function dfloat(num,isCrit,overrideColor){
+  if(!GAME_SETTINGS.effects)return;// feature: settings toggle for visual effects
   const el=document.createElement('div');el.className='dfloat';
   const n=typeof num==='number'?num:parseInt(String(num).replace(/\D/g,''))||0;
   if(overrideColor){el.style.color=overrideColor;el.style.fontSize='1.4rem';}
@@ -2038,7 +2221,12 @@ function dfloat(num,isCrit,overrideColor){
   el.style.left=(20+Math.random()*160)+'px';el.style.top=(150+Math.random()*60)+'px';
   document.body.appendChild(el);setTimeout(()=>el.remove(),1200);
 }
-function addLog(m,t){const l=document.getElementById('blog');const d=document.createElement('div');d.className='le '+(t||'');d.textContent=m;l.appendChild(d);l.scrollTop=l.scrollHeight;}
+// FIX: event outcomes (CP gambling results, relics received, etc.) were only ever written
+// to addLog(), which renders into the BATTLE screen's log (#blog) - invisible while on the
+// event screen, so results were never actually visible to the player. addLog now also
+// buffers recent messages so the event flow can show them in an explicit confirmation step.
+let _logBuffer=[];
+function addLog(m,t){const l=document.getElementById('blog');const d=document.createElement('div');d.className='le '+(t||'');d.textContent=m;l.appendChild(d);l.scrollTop=l.scrollHeight;_logBuffer.push(m);if(_logBuffer.length>300)_logBuffer.shift();}
 function clearLog(){document.getElementById('blog').innerHTML='';}
 function rarCls(r){return{common:'r-common',rare:'r-rare',epic:'r-epic',legendary:'r-legendary',mystic:'r-mystic'}[r]||'r-common';}
 function renderTB(ts){
@@ -2103,7 +2291,22 @@ async function dlGame(){
 const _MF_MEM={easy:0,normal:0,hard:0,lunatic:0};
 function saveMF(){if(G.floor>(_MF_MEM[G.diff]||0))_MF_MEM[G.diff]=G.floor;}
 function getMFs(){return {..._MF_MEM};}
-function updateTitleInfo(){const r=getMFs();const p=Object.entries(r).filter(([,v])=>v>0).map(([k,v])=>`${k[0].toUpperCase()+k.slice(1)}: ${v}F`);document.getElementById('mf-info').textContent=p.length?`最高記録: ${p.join(' / ')}`:'初めての挑戦！';}
+function updateTitleInfo(){
+  const r=getMFs();const p=Object.entries(r).filter(([,v])=>v>0).map(([k,v])=>`${k[0].toUpperCase()+k.slice(1)}: ${v}F`);
+  document.getElementById('mf-info').textContent=p.length?`最高記録: ${p.join(' / ')}`:'初めての挑戦！';
+  renderAscensionChips();
+}
+// feature: Ascension chip selector on the title screen - toggles window.ACTIVE_ASCENSIONS,
+// which initG() reads when a difficulty is picked.
+function renderAscensionChips(){
+  const el=document.getElementById('asc-chips');if(!el)return;
+  el.innerHTML=ASCENSIONS.map(a=>`<div class="asc-chip ${window.ACTIVE_ASCENSIONS.includes(a.id)?'on':''}" onclick="toggleAscension('${a.id}')" title="${a.desc}">${a.name}</div>`).join('');
+}
+function toggleAscension(id){
+  if(window.ACTIVE_ASCENSIONS.includes(id))window.ACTIVE_ASCENSIONS=window.ACTIVE_ASCENSIONS.filter(x=>x!==id);
+  else window.ACTIVE_ASCENSIONS.push(id);
+  renderAscensionChips();
+}
 function openEditor(){document.getElementById('ed-area').value=_raw;document.getElementById('ed-msg').textContent='';showScr('editor');}
 function applyEditor(){const cnt=parseTxtData(document.getElementById('ed-area').value);edMsg(`✔ 反映 スキル${cnt.sk}/パッシブ${cnt.pa}/敵${cnt.en}/スペカ${cnt.sc}/レリック${cnt.rel}/アイテム${cnt.it}`,'#5dcaa5');}
 function copyEditor(){
@@ -2118,6 +2321,122 @@ function edMsg(m,c){const el=document.getElementById('ed-msg');el.textContent=m;
 function startGame(diff){
   initG(diff);updateTitleInfo();document.getElementById('relic-btn').style.display='none';document.getElementById('pass-view-btn').style.display='none';
   showDeckPick(()=>showScPick(diff==='lunatic',()=>showFirstSkPick(()=>nextFloor())));
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Settings + Admin panel
+// ══════════════════════════════════════════════════════════════════
+function openSettings(){
+  document.getElementById('tg-effects').classList.toggle('on',GAME_SETTINGS.effects);
+  document.getElementById('tg-floorwait').classList.toggle('on',GAME_SETTINGS.floorWait);
+  document.getElementById('admin-status').textContent=GAME_SETTINGS.adminMode?'認証済み（管理者モード有効）':'未認証';
+  document.getElementById('pop-settings').classList.add('show');
+}
+function toggleSetting(key){
+  GAME_SETTINGS[key]=!GAME_SETTINGS[key];
+  document.getElementById(key==='effects'?'tg-effects':'tg-floorwait').classList.toggle('on',GAME_SETTINGS[key]);
+}
+function tryAdminLogin(){
+  const val=document.getElementById('admin-pass').value;
+  if(val===ADMIN_PASSWORD){
+    GAME_SETTINGS.adminMode=true;
+    document.getElementById('admin-status').textContent='認証済み（管理者モード有効）';
+    document.getElementById('admin-toggle-tab').style.display='block';
+    document.getElementById('admin-pass').value='';
+    alert('管理者モードが有効になりました。画面左端のタブから開閉できます。');
+  }else{
+    alert('パスワードが違います');
+  }
+}
+function toggleAdminPanel(){
+  const el=document.getElementById('admin-panel');
+  const opening=!el.classList.contains('open');
+  el.classList.toggle('open');
+  if(opening)renderAdminPanel();
+}
+function renderAdminPanel(){
+  const el=document.getElementById('admin-panel');
+  const inBattle=!!G.enemy&&G.p&&document.getElementById('scr-battle').classList.contains('active');
+  const p=G.p||{};
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <b style="color:var(--danger);font-size:.9rem">⚠ 管理者パネル</b>
+      <button class="btn" style="padding:3px 8px;font-size:.68rem" onclick="toggleAdminPanel()">閉じる</button>
+    </div>
+    <div class="admin-sec">
+      <h4>ステータス直接編集</h4>
+      <div class="admin-row"><input id="adm-hp" type="number" placeholder="HP" value="${p.hp??''}"><button onclick="admSetStat('hp')">適用</button></div>
+      <div class="admin-row"><input id="adm-maxhp" type="number" placeholder="最大HP" value="${p.maxHp??''}"><button onclick="admSetStat('maxHp')">適用</button></div>
+      <div class="admin-row"><input id="adm-sp" type="number" placeholder="SP" value="${p.sp??''}"><button onclick="admSetStat('sp')">適用</button></div>
+      <div class="admin-row"><input id="adm-maxsp" type="number" placeholder="最大SP" value="${p.maxSp??''}"><button onclick="admSetStat('maxSp')">適用</button></div>
+      <div class="admin-row"><input id="adm-atk" type="number" placeholder="ATK" value="${p.atk??''}"><button onclick="admSetStat('atk')">適用</button></div>
+      <div class="admin-row"><input id="adm-cp" type="number" placeholder="CP" value="${p.cp??''}"><button onclick="admSetStat('cp')">適用</button></div>
+    </div>
+    <div class="admin-sec">
+      <h4>ドロー（戦闘中のみ）</h4>
+      <div class="admin-row"><input id="adm-draw-n" type="number" placeholder="枚数" value="3" style="max-width:60px"><button onclick="admDraw()" ${inBattle?'':'disabled'}>ドロー</button></div>
+      ${inBattle?'':'<div style="font-size:.65rem;color:var(--t3)">※戦闘中のみ使用できます</div>'}
+    </div>
+    <div class="admin-sec">
+      <h4>カード追加</h4>
+      <div class="admin-row">
+        <select id="adm-sk-add">${SKILL_DB.map(s=>`<option value="${s.id}">${s.name}(${s.rarity})</option>`).join('')}</select>
+        <button onclick="admAddSkill()">追加</button>
+      </div>
+      <h4 style="margin-top:8px">所持カード削除</h4>
+      <div class="admin-row">
+        <select id="adm-sk-del">${(p.skills||[]).map(s=>`<option value="${s.uid}">${s.name}</option>`).join('')}</select>
+        <button onclick="admDelSkill()">削除</button>
+      </div>
+    </div>
+    <div class="admin-sec">
+      <h4>レリック装備</h4>
+      <div class="admin-chk-list">${RELIC_DB.map(r=>`<label><input type="checkbox" ${(p.relics||[]).includes(r.id)?'checked':''} onchange="admToggleRelic('${r.id}',this.checked)">${r.name}</label>`).join('')}</div>
+    </div>
+    <div class="admin-sec">
+      <h4>パッシブ装備</h4>
+      <div class="admin-chk-list">${PASSIVE_DB.map(ps=>`<label><input type="checkbox" ${(p.passives||[]).some(x=>x.id===ps.id)?'checked':''} onchange="admTogglePassive('${ps.id}',this.checked)">${ps.name}</label>`).join('')}</div>
+    </div>
+    <div class="admin-sec" style="border-bottom:none">
+      <h4>その他</h4>
+      <div class="admin-row"><button onclick="G.p.cp+=99999;renderAdminPanel();updateTownUI();" style="flex:1">CP+99999</button></div>
+      <div class="admin-row"><button onclick="if(G.enemy){G.enemy.hp=0;checkEnd();}" style="flex:1" ${inBattle?'':'disabled'}>敵を即死させる</button></div>
+    </div>
+  `;
+}
+function admSetStat(key){
+  const idMap={hp:'adm-hp',maxHp:'adm-maxhp',sp:'adm-sp',maxSp:'adm-maxsp',atk:'adm-atk',cp:'adm-cp'};
+  const val=parseInt(document.getElementById(idMap[key]).value);
+  if(isNaN(val))return;
+  G.p[key]=val;
+  if(document.getElementById('scr-battle').classList.contains('active'))updateBUI();
+  if(document.getElementById('scr-town').classList.contains('active'))updateTownUI();
+  renderAdminPanel();
+}
+function admDraw(){
+  const n=parseInt(document.getElementById('adm-draw-n').value)||1;
+  if(!G.enemy)return;
+  drawCards(n);updateBUI();
+}
+function admAddSkill(){
+  const id=parseInt(document.getElementById('adm-sk-add').value);
+  const sk=SKILL_DB.find(s=>s.id===id);if(!sk)return;
+  const c=clone(sk);c.uid=c.id+'_adm_'+Date.now();G.p.skills.push(c);
+  renderAdminPanel();
+}
+function admDelSkill(){
+  const uid=document.getElementById('adm-sk-del').value;
+  G.p.skills=G.p.skills.filter(s=>s.uid!==uid);
+  renderAdminPanel();
+}
+function admToggleRelic(id,on){
+  if(on){if(!G.p.relics.includes(id))G.p.relics.push(id);}
+  else G.p.relics=G.p.relics.filter(r=>r!==id);
+  if(document.getElementById('scr-battle').classList.contains('active'))updateBUI();
+}
+function admTogglePassive(id,on){
+  if(on){if(!G.p.passives.some(p=>p.id===id)){const ps=clone(PASSIVE_DB.find(x=>x.id===id));if(ps){ps.uid='adm_'+Date.now();G.p.passives.push(ps);}}}
+  else G.p.passives=G.p.passives.filter(p=>p.id!==id);
 }
 
 loadTagFile().then(()=>{showScr('title');updateTitleInfo();});
