@@ -241,7 +241,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino San
 <div class="diff-btn" onclick="startGame('hard')">Hard<br><span style="font-size:.67rem;color:var(--t2)">CP50/敵強/呪い35%</span></div>
 <div class="diff-btn luna" onclick="startGame('lunatic')">Lunatic<br><span style="font-size:.67rem;color:var(--t2)">CP0/狂気/呪い100%</span></div>
 </div>
-<div style="margin-top:10px;font-size:.72rem;color:var(--t3)">アセンション（任意・重ねがけ可）</div>
+<div style="margin-top:10px;font-size:.72rem;color:var(--t3)">アセンション</div>
 <div id="asc-chips" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:5px"></div>
 <div id="asc-desc" style="font-size:.68rem;color:var(--danger);margin-top:4px;min-height:1em"></div>
 <div class="tbtns">
@@ -436,10 +436,10 @@ const DIFF={
 const ASCENSION_LEVELS=[
   {level:0,name:'なし',desc:'通常難易度'},
   {level:1,name:'A1',desc:'敵のHP+20%'},
-  {level:2,name:'A2',desc:'敵のATK+20%（A1の効果も継続）'},
-  {level:3,name:'A3',desc:'ショップの価格+30%（A1〜2の効果も継続）'},
-  {level:4,name:'A4',desc:'初期SP-1（A1〜3の効果も継続）'},
-  {level:5,name:'A5',desc:'プレイヤーの初期HP-20%（A1〜4の効果も継続）'},
+  {level:2,name:'A2',desc:'敵のATK+20%'},
+  {level:3,name:'A3',desc:'ショップの価格+30%'},
+  {level:4,name:'A4',desc:'初期SP-1'},
+  {level:5,name:'A5',desc:'プレイヤーの初期HP-20%'},
 ];
 const STNAMES={POISON:'毒',BURN:'燃焼',FREEZE:'氷結',STUN:'気絶',WEAKEN:'弱体',BLEED:'出血',SILENCE:'沈黙',BREAK_OPEN:'無防備',ATK_BUFF:'ATKバフ',SURE:'必中',DEF_DOWN:'防御↓'};
 const AILMENTS=['POISON','BURN','FREEZE','STUN','WEAKEN','BLEED','SILENCE'];
