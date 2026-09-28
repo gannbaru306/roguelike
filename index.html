@@ -690,6 +690,8 @@ function autoDesc(tags){
     else if(h>1)p.push(`攻撃力×${a}で${h}回連続攻撃（±10%ランダム）`);
     else p.push(`攻撃力×${a}で攻撃（±10%ランダム）`);
   }
+  {const cn=tags.find(t=>t.type==='COPY_NEXT');if(cn)p.push(`次に使うカードを${cn.val}枚分コピー(コピーはSP0)`);
+   const dc=tags.find(t=>t.type==='DMG_CAP_PCT');if(dc)p.push(`${dc.dur}ターン、1回の被ダメージを最大HPの${dc.val}%までに制限`);}
   if(buf)p.push(`自身ATK+${buf.val}%（2ターン）`);// FIX: execCardTags actually applies BUFF_ATK for 2 turns (balance change 3→2), but this
   // auto-generated tooltip still hardcoded the old "3ターン" text, so every card's displayed
   // duration silently disagreed with its real effect (e.g. 壊れた懐中時計 desc said "(2turn)"
@@ -838,6 +840,9 @@ function getSkSP(sk){
   // relic/passive SP_COST_DOWN
   const down=getPB('SP_COST_DOWN')+getRelicVal('SP_COST_DOWN');
   sp=Math.max(0,sp-Math.floor(down));
+  // FIX: FREEZE inflicted on the PLAYER (チルノ etc.) used to do nothing at all - only the enemy-side
+  // FREEZE was ever read. A frozen player now pays +1 SP on every non-free card.
+  if(sp>0&&hasSt(G.p,'FREEZE'))sp+=1;
   return sp;
 }
 function gainOP(h){const b=getOPBoost(),c=DIFF[G.diff];const op=Math.min(G.p.maxOp,G.p.op+Math.floor(h*(1+b/100)*c.opM));G.p.op=op;}
@@ -940,7 +945,7 @@ function makeJunkCard(kind){
 // magnitude of a status an enemy inflicts on the player. Legacy statuses scale with enemy ATK;
 // the new boss statuses use fixed, meaningful values (BLIND=命中-30%, FATE=カード3枚上限...).
 const ST_FIXED={BLIND:30,FROZENSP:1,REVERSAL:1,FATE:3,EVADE:40};
-const ST_PLAYER_TURNS={BLIND:1,FROZENSP:1,REVERSAL:1,FATE:1};// tickSt(player) runs at the end of the same enemy turn, so +1 to last the stated number of player turns
+const ST_PLAYER_TURNS={BLIND:1,FROZENSP:1,REVERSAL:1,FATE:1,FREEZE:1,STUN:1,SILENCE:1,WEAKEN:1,DEF_DOWN:1};// tickSt(player) runs at the end of the same enemy turn, so +1 to last the stated number of player turns
 function eStDur(name,d){return d+(ST_PLAYER_TURNS[name]||0);}
 function eStVal(e,name,k){return ST_FIXED[name]!==undefined?ST_FIXED[name]:(Math.floor(e.atk*k)||1);}
 function execECard(e,card,weakMul=1){
@@ -1174,6 +1179,8 @@ function playCard(uid){
   const bd=G.battle;
   if(hasSpRegenSource()&&(bd.cardsPlayedThisTurn||0)>=4){addLog('SP収集効果の代償で、このターンはもうカードを出せない！(4枚上限)','sy');return;}
   // feature (レミリアの運命の糸/FATE) - caps how many cards can be played this turn.
+  // FIX: STUN on the player was likewise ignored - now limits the turn to a single card.
+  if(hasSt(G.p,'STUN')&&(bd.cardsPlayedThisTurn||0)>=1){addLog('気絶で体が動かない！このターンはもう1枚しか出せない','sy');return;}
   if(hasSt(G.p,'FATE')&&(bd.cardsPlayedThisTurn||0)>=getSt(G.p,'FATE')){addLog(`運命の糸に縛られ、これ以上カードを出せない！(${getSt(G.p,'FATE')}枚上限)`,'sy');return;}
   const ci=bd.hand.findIndex(c=>c.uid===uid);if(ci<0)return;
   const card=bd.hand[ci];
@@ -1616,6 +1623,7 @@ function enemyTurn(){
   // the normal OP-gauge spellcard gate) and the counter resets. Gives a hard damage-race
   // deadline distinct from the normal OP-charge spellcard loop.
   if(e.chargeTurn!==undefined&&e.hp>0){
+    e.chargeTurn--;// FIX: previously checked before decrementing, so a 3-turn charge actually took 4 turns
     if(e.chargeTurn<=0){
       const d=Math.floor(e.atk*e.sMult*5.0*weakMul);
       addLog(`💀 ${e.name}の${e.spell}！溜め続けた一撃が解放された！`,'sc');
@@ -1624,7 +1632,6 @@ function enemyTurn(){
       e.chargeTurn=3;
       G.turn++;tickSt(p,m=>addLog(m,'sy'));startNewPlayerTurn();return;
     }else{
-      e.chargeTurn--;
       addLog(`⚠ ${e.name}は力を溜めている…（${e.spell} 残り${e.chargeTurn}T）`,'ea');
     }
   }
@@ -1686,6 +1693,7 @@ function startNewPlayerTurn(){
 let _dmkAF=null;
 function castSpellcard(){
   if(!G.p.spellcard){addLog('スペルカードがない！','sy');return;}
+  if(hasSt(G.p,'SILENCE')){addLog('沈黙状態のためスペルカードを発動できない！','sy');return;}// FIX: SILENCE on the player was never checked
   const opCost=getRelicEff('OP_HALF')||getPB('OP_HALF')?50:100;
   if(G.p.op<opCost){addLog(`OP不足！(${opCost}必要)`,'sy');return;}
   // FIX: this used to zero OP outright regardless of how much was actually banked, silently
@@ -1796,7 +1804,7 @@ function drawToFill(extra=0){const n=(G.battle.handSize+getDrawP()+extra)-G.batt
 function startBattle(isBoss,isDisg){
   G.turn=0;G.bs={atkMult:1.0,critRate:5};G.tempSpRegen=0;G._pendingOverkillCP=0;// defensive reset each battle
   G._mysticCastThisBattle=0;G._battleNoDirectHit=true;G._turnDmgAccum=0;G._enemyActs=0;G._charmUsed=false;
-  if(!G._initSkillKey){G._initSkillKey=G.p.skills.map(s=>s.id).sort().join(',');G._initPassKey=G.p.passives.map(s=>s.id).sort().join(',');}// achievements: remember the starting loadout// feature: stats/achievement tracking
+  if(!G._initSkillKey){G._initSkillKey=G.p.skills.map(s=>s.uid||s.id).sort().join(',');G._runSynths=0;G._initPassKey=G.p.passives.map(s=>s.id).sort().join(',');}// achievements: remember the starting loadout// feature: stats/achievement tracking
   {const st=getStats();st.totalBattles=(st.totalBattles||0)+1;saveStats(st);}// FIX: totalBattles was declared but never actually incremented anywhere
   G.enemy=spawnEnemy(G.floor,G.diff,isBoss);G.p.statusList=[];G.p.shields=[];// FIX: player barriers used to persist indefinitely across battles instead of resetting
   // feature: OP cap removal relic - normally OP clamps at 100 every battle; with this relic
@@ -1884,7 +1892,7 @@ function checkEnd(){
         if(G._battleNoDirectHit)st.ach_perfectBoss=true;
         if(_hpAtKill===1&&_shAtKill===0&&!G._charmUsed)st.ach_edge=true;
         if(G._enemyActs===0)st.ach_oneKill=true;
-        if(G.floor===10&&G.p.skills.map(s=>s.id).sort().join(',')===G._initSkillKey&&!(G.rec&&G.rec.synths))st.ach_noGreed=true;
+        if(G.floor===10&&G.p.skills.map(s=>s.uid||s.id).sort().join(',')===G._initSkillKey&&!G._runSynths)st.ach_noGreed=true;
         if(G.floor===30&&p.relics.length===0)st.ach_bareHero=true;
         if(G.floor===30&&G.p.skills.length<=3)st.ach_minimalist=true;
         if(G.floor===30&&G.p.passives.map(s=>s.id).sort().join(',')===G._initPassKey)st.ach_loneWarrior=true;
@@ -2714,7 +2722,7 @@ function doSynth(){
     G.p.skills.push(ns);G.synthA=null;G.synthB=null;
     addLog(mutated?`✨✨ 変異発生！『${ns.name}』が生まれた！（${mutDesc}）`:`⚗ ${ns.name}に合成！`,'sy');
     // feature: stats tracking
-    {const st=getStats();st.totalSynths=(st.totalSynths||0)+1;if(mutated)st.totalMutations=(st.totalMutations||0)+1;saveStats(st);checkAchievements();}
+    {const st=getStats();st.totalSynths=(st.totalSynths||0)+1;G._runSynths=(G._runSynths||0)+1;if(mutated)st.totalMutations=(st.totalMutations||0)+1;saveStats(st);checkAchievements();}
     updateSynthUI();
   }catch(err){
     if(!G.synthFree)G.p.cp+=c;// refund on failure
