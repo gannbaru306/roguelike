@@ -503,21 +503,35 @@ function getDailySalt(){let s=lsGet('dailySalt',null);if(s===null){s=Math.floor(
 function getTodayStr(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
 function getDailySeed(){return `daily-${getTodayStr()}-${getDailySalt()}`;}
 const DAILY_MOD_POOL=[
-  {id:'rate_down',name:'呪いの霧',desc:'自分が与える状態異常の付与確率-15%'},
-  {id:'enemy_hp_up',name:'重圧',desc:'敵のHP+25%'},
-  {id:'draw_down',name:'寡少',desc:'手札の基本枚数-1（最低3枚）'},
-  {id:'shop_up',name:'資金難',desc:'ショップ価格+50%'},
-  {id:'sp_down',name:'枯渇',desc:'初期SP-2、SP自然回復-1'},
-  {id:'no_relic',name:'無縁',desc:'ボスのレリックドロップなし'},
-  {id:'enemy_atk_up',name:'怒れる敵',desc:'敵の攻撃力+20%'},
-  {id:'op_down',name:'閉ざされたゲージ',desc:'OP・スペカ関連のチャージ量-25%'},
+  {id:'rate_down',name:'呪いの霧',type:'debuff',desc:'自分が与える状態異常の付与確率-15%'},
+  {id:'enemy_hp_up',name:'重圧',type:'debuff',desc:'敵のHP+25%'},
+  {id:'draw_down',name:'寡少',type:'debuff',desc:'手札の基本枚数-1（最低3枚）'},
+  {id:'shop_up',name:'資金難',type:'debuff',desc:'ショップ価格+50%'},
+  {id:'sp_down',name:'枯渇',type:'debuff',desc:'初期SP-2、SP自然回復-1'},
+  {id:'no_relic',name:'無縁',type:'debuff',desc:'ボスのレリックドロップなし'},
+  {id:'enemy_atk_up',name:'怒れる敵',type:'debuff',desc:'敵の攻撃力+20%'},
+  {id:'op_down',name:'閉ざされたゲージ',type:'debuff',desc:'OP・スペカ関連のチャージ量-25%'},
+  // feature: positive daily modifiers, so the daily isn't purely a gauntlet of handicaps.
+  // getDailyMods() guarantees at least one 'buff' among the 3 picked.
+  {id:'draw_up',name:'追い風',type:'buff',desc:'手札の基本枚数+1'},
+  {id:'sp_up',name:'潤沢な霊力',type:'buff',desc:'初期SP+2、SP自然回復+1'},
+  {id:'shop_down',name:'宝の山',type:'buff',desc:'ショップ価格-30%'},
+  {id:'enemy_hp_down',name:'祝福',type:'buff',desc:'敵のHP-15%'},
+  {id:'op_up',name:'加速したゲージ',type:'buff',desc:'OP・スペカ関連のチャージ量+25%'},
+  {id:'relic_up',name:'強運',type:'buff',desc:'ボスのレリックドロップ率上昇（35%→65%）'},
 ];
 function getDailyMods(){
   const rnd=mulberry32(hashSeedStr(getDailySeed()+'-mods')());
   const pool=[...DAILY_MOD_POOL];const picked=[];
-  for(let i=0;i<3&&pool.length;i++){const idx=Math.floor(rnd()*pool.length);picked.push(pool.splice(idx,1)[0]);}
+  // guarantee at least one buff among the 3, so the daily isn't pure handicaps
+  const buffs=pool.filter(m=>m.type==='buff');
+  const firstBuff=buffs[Math.floor(rnd()*buffs.length)];
+  picked.push(firstBuff);pool.splice(pool.indexOf(firstBuff),1);
+  for(let i=0;i<2&&pool.length;i++){const idx=Math.floor(rnd()*pool.length);picked.push(pool.splice(idx,1)[0]);}
+  shuffleWith(picked,rnd);// don't always show the guaranteed buff first
   return picked;
 }
+function shuffleWith(arr,rnd){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
 function hasDailyMod(id){return G.isDaily&&(G.dailyMods||[]).some(m=>m.id===id);}
 function getDailyStatus(){return lsGet('dailyChallenge',{date:null,completed:false})||{date:null,completed:false};}
 function isDailyDoneToday(){const d=getDailyStatus();return d.date===getTodayStr()&&d.completed;}
@@ -1025,7 +1039,7 @@ function applyRegens(){
     if(relicSpRegen>0)G.p.sp=Math.min(G.p.maxSp,G.p.sp+relicSpRegen);
     // temp sp regen (from the SP-restoring ITEM, which genuinely is a one-shot activation)
     if(G.tempSpRegen>0){G.p.sp=Math.min(G.p.maxSp,G.p.sp+G.tempSpRegenVal);G.tempSpRegen--;if(G.tempSpRegen===0)addLog('SP収集効果終了','sy');}
-    G.p.sp=Math.min(G.p.maxSp,G.p.sp+3-(hasDailyMod('sp_down')?1:0));// FIX(balance): base SP regen 2→3 per turn
+    G.p.sp=Math.min(G.p.maxSp,G.p.sp+3-(hasDailyMod('sp_down')?1:0)+(hasDailyMod('sp_up')?1:0));// FIX(balance): base SP regen 2→3 per turn
     if(hasSt(G.p,'FATE')&&getSt(G.p,'FATE')===3){const gain=G.p.sp-spBefore;G.p.sp=spBefore+Math.ceil(gain/2);addLog('🎲 運命の糸：SP回復が半減した','ea');}
   }
   // feature: passive drawback support - e.g. a big ATK buff passive that costs HP every turn.
@@ -1060,14 +1074,14 @@ function initG(diff){
   const isDaily=!!dailyMods;const dmHas=id=>isDaily&&dailyMods.some(m=>m.id===id);
   // feature: Ascension level (0-5, cumulative) chosen at the title screen
   const lvl=window.ASCENSION_LEVEL||0;
-  const startSp=Math.max(1,8-(lvl>=4?1:0)-(dmHas('sp_down')?2:0));
+  const startSp=Math.max(1,8-(lvl>=4?1:0)-(dmHas('sp_down')?2:0)+(dmHas('sp_up')?2:0));
   const hpFactor=lvl>=5?0.8:1;
   G={diff,floor:1,turn:0,seed,isDaily,dailyMods,scPickRR:false,skPickRR:false,prevScr:null,
     synthA:null,synthB:null,synthFree:false,passIdleBonus:false,
     tempSpRegen:0,tempSpRegenVal:0,
     ascensionLevel:lvl,
     bs:{atkMult:1.0,critRate:5},
-    battle:{deck:[],hand:[],discard:[],excluded:[],handSize:dmHas('draw_down')?3:4,playerActed:false,idleLastTurn:false},
+    battle:{deck:[],hand:[],discard:[],excluded:[],handSize:dmHas('draw_down')?3:(dmHas('draw_up')?5:4),playerActed:false,idleLastTurn:false},
     p:{name:'プレイヤー',lv:1,exp:0,hp:Math.floor(100*hpFactor),maxHp:Math.floor(100*hpFactor),sp:startSp,maxSp:startSp,op:0,maxOp:100,
        atk:30,cp:cfg.initCP,statusList:[],items:[],passiveSlotMax:cfg.slots,
        passives:[],passiveInv:[],skills:[],spellcard:null,relics:[],shields:[]},
@@ -1094,8 +1108,8 @@ function getSkSP(sk){
   // FREEZE was ever read. A frozen player now pays +1 SP on every non-free card.
   return sp;
 }
-function gainOP(h){const b=getOPBoost(),c=DIFF[G.diff];const op=Math.min(G.p.maxOp,G.p.op+Math.floor(h*(1+b/100)*c.opM*(hasDailyMod('op_down')?0.75:1)));G.p.op=op;}
-function gainOPSP(sp){if(sp>0)G.p.op=Math.min(G.p.maxOp,G.p.op+Math.floor(sp*2*(hasDailyMod('op_down')?0.75:1)));}
+function gainOP(h){const b=getOPBoost(),c=DIFF[G.diff];const op=Math.min(G.p.maxOp,G.p.op+Math.floor(h*(1+b/100)*c.opM*(hasDailyMod('op_down')?0.75:1)*(hasDailyMod('op_up')?1.25:1)));G.p.op=op;}
+function gainOPSP(sp){if(sp>0)G.p.op=Math.min(G.p.maxOp,G.p.op+Math.floor(sp*2*(hasDailyMod('op_down')?0.75:1)*(hasDailyMod('op_up')?1.25:1)));}
 
 // feature: named boss rotation. Regular enemies keep using the original ENEMY_DB range; boss
 // floors (every 5F) draw from tiered pools. Tier1 (~F10): the original 魔王 stays + 3 early bosses.
@@ -1145,7 +1159,7 @@ function spawnEnemy(fl,diff,isBoss,isElite){
   const cp=Math.max(1,Math.floor(base.cp*cpMul*(isBoss?2.5:1)*(isElite?1.8:1)));
   // feature: elite enemies - a stronger version of a regular (non-boss) floor's enemy, worth
   // meaningfully more CP. Never spawns on boss floors (isElite implies isBoss is false).
-  const eliteHpMul=(isElite?1.6:1)*(hasDailyMod('enemy_hp_up')?1.25:1),eliteAtkMul=(isElite?1.3:1)*(hasDailyMod('enemy_atk_up')?1.2:1);
+  const eliteHpMul=(isElite?1.6:1)*(hasDailyMod('enemy_hp_up')?1.25:1)*(hasDailyMod('enemy_hp_down')?0.85:1),eliteAtkMul=(isElite?1.3:1)*(hasDailyMod('enemy_atk_up')?1.2:1);
   const e={...clone(base),hp:Math.floor(hp*eliteHpMul),atk:Math.floor(atk*eliteAtkMul),cp,op:0,maxOp:100,statusList:[],isBoss:!!isBoss,isElite:!!isElite,
     safeTurns:lf1?3:0,actions:isBoss?Math.max(2,base.actions):(isElite&&fl>=20?2:1),shields:[]};
   e.maxHp=e.hp;
@@ -2296,7 +2310,7 @@ function checkEnd(){
         if(sig){G._pendingRelic=sig.id;addLog(`✦ ${e.name}を倒した証「${sig.name}」を手に入れた！`,'sc');droppedRelic=sig;}
       }
       const relicPool=RELIC_DB.filter(r=>r.rarity!=='mystic'&&!p.relics.includes(r.id));
-      if(!droppedRelic&&relicPool.length&&Math.random()<0.35){
+      if(!droppedRelic&&relicPool.length&&Math.random()<(hasDailyMod('relic_up')?0.65:0.35)){
         const exclusive=relicPool.filter(r=>BOSS_ONLY_RELICS.includes(r.id));
         const pick=(exclusive.length&&Math.random()<0.5)?exclusive[Math.floor(Math.random()*exclusive.length)]:relicPool[Math.floor(Math.random()*relicPool.length)];
         // FEATURE: boss relic drops are now an offer (take / decline) instead of being forced on the player -
@@ -3006,6 +3020,7 @@ function openShop(){
   // Shop discount relic
   const disc=getRelicVal('SHOP_DISCOUNT');fm*=(1-disc/100);
   if(hasDailyMod('shop_up'))fm*=1.5;// feature: daily challenge modifier
+  if(hasDailyMod('shop_down'))fm*=0.7;// feature: daily challenge modifier
   // FIX: relics/spellcards/materials/items used to ALL be purchasable at once and infinitely -
   // the shop now rolls small, floor-locked random rotations, and repeat-buying scales price up
   // steeply until stock for that item runs out for this visit.
@@ -4491,6 +4506,7 @@ function nextAchToast(){
   t.classList.add('show');
   setTimeout(()=>{t.classList.remove('show');setTimeout(nextAchToast,500);},3200);
 }
+// feature: meta-points earned even on a game-over run, spendable to reveal codex entries.
 function getMetaPoints(){return lsGet('metaPoints',0);}
 function addMetaPoints(n){lsSet('metaPoints',getMetaPoints()+n);}
 
