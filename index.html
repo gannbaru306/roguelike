@@ -519,6 +519,13 @@ const DAILY_MOD_POOL=[
   {id:'enemy_hp_down',name:'祝福',type:'buff',desc:'敵のHP-15%'},
   {id:'op_up',name:'加速したゲージ',type:'buff',desc:'OP・スペカ関連のチャージ量+25%'},
   {id:'relic_up',name:'強運',type:'buff',desc:'ボスのレリックドロップ率上昇（35%→65%）'},
+  // feature: more interesting mods beyond flat numbers/probabilities - these change HOW you play.
+  {id:'double_reward',name:'二重の恵み',type:'buff',desc:'戦闘報酬で2枚選べる（2枚目は無料）'},
+  {id:'free_revive',name:'身代わりの加護',type:'buff',desc:'今日一度だけ、HPが0になる代わりに1で耐える'},
+  {id:'reveal_koishi',name:'先読みの目',type:'buff',desc:'こいしの隠された行動予告が見えるようになる'},
+  {id:'curse_extend',name:'共鳴する呪い',type:'debuff',desc:'敵から受けた状態異常の残りターンが+1される'},
+  {id:'no_repeat',name:'縛られた選択',type:'debuff',desc:'同じ名前のカードは1戦闘につき1回しか使えない'},
+  {id:'shield_decay',name:'崩れゆく守り',type:'debuff',desc:'自分のターン開始時、バリアが20%ずつ風化する'},
 ];
 function getDailyMods(){
   const rnd=mulberry32(hashSeedStr(getDailySeed()+'-mods')());
@@ -1230,6 +1237,9 @@ function inflictPlayer(e,name,val,dur){
   if(e&&e.isBoss)G._bossCurseHit=true;
   // feature (呪術耐性の御守/CURSE_RESIST): shortens curse-status durations by 1 (min 1)
   if(CURSE_STATUSES.includes(name)&&getRelicEff('CURSE_RESIST'))dur=Math.max(1,dur-1);
+  // feature (デイリー: 共鳴する呪い/curse_extend) - the opposite: any enemy-inflicted status
+  // (not just the "curse" ones) lasts 1 turn longer.
+  if(hasDailyMod('curse_extend'))dur+=1;
   if(name==='STUN'){
     if(G.p._stunCd>0){addLog('💫 気絶を耐え切った！(連続気絶は無効)','sy');return;}
     G.p._stunCd=3;dur=1;
@@ -1416,6 +1426,13 @@ function reviveIfCharm(){
   // feature: admin god mode - reuses this same central post-damage choke point (already
   // called after every HP-reducing path: hitPlayer, tickSt, CURSE_DMG, cursed-hand ticks).
   if(window.ADMIN_GOD_MODE&&G.p.hp<=0){G.p.hp=1;return;}
+  // feature (デイリー: 身代わりの加護/free_revive) - a once-per-run free save, independent of
+  // (and consumed before) the 身代わりの御守 relic.
+  if(G.p.hp<=0&&hasDailyMod('free_revive')&&!G._dailyReviveUsed){
+    G.p.hp=1;G._dailyReviveUsed=true;
+    addLog('🌸 身代わりの加護！今日だけの幸運でHP1で耐えた！','sc');
+    return;
+  }
   if(G.p.hp<=0&&G.p.relics.includes('charm')){
     G.p.hp=1;
     addLog('✦ 身代わりの御守が発動！HP1で耐えた！（レリック消失）','sc');
@@ -1509,6 +1526,11 @@ function playCard(uid){
   if(hasSt(G.p,'FATE')&&getSt(G.p,'FATE')===1&&(bd.cardsPlayedThisTurn||0)>=3){addLog('🎲 運命の糸：このターンはカードを3枚までしか出せない！','sy');return;}
   const ci=bd.hand.findIndex(c=>c.uid===uid);if(ci<0)return;
   if(bd.hand[ci].frozen){addLog(`❄ ${bd.hand[ci].name}は凍っていて使えない！`,'sy');return;}
+  // feature (デイリー: 縛られた選択/no_repeat) - each card NAME can only be played once per battle.
+  if(hasDailyMod('no_repeat')){
+    bd.usedCardNames=bd.usedCardNames||new Set();
+    if(bd.usedCardNames.has(bd.hand[ci].name)){addLog(`🔒 縛られた選択：「${bd.hand[ci].name}」は今の戦闘でもう使えない！`,'sy');return;}
+  }
   const firstOfTurn=(bd.cardsPlayedThisTurn||0)===0;
   const card=bd.hand[ci];
   // feature (ALT card mechanic): CONDFREE - this card costs 0 SP if the player has already
@@ -1536,6 +1558,7 @@ function playCard(uid){
     addLog(`✦ 【神話P】リサイクル発動！${card.name}が手札に戻った(SP0)！`,'sc');
     actualExcl=false;
   }
+  if(hasDailyMod('no_repeat')){bd.usedCardNames=bd.usedCardNames||new Set();bd.usedCardNames.add(card.name);}
   G._curAttr=tags.find(t=>t.type==='ATTR')?.val||'?';
   execCardTags(tags,card.name);
   // 力カード: 連鎖詠唱 (first card each turn fires twice) / 弾幕の心得 (ATK grows with every card played)
@@ -1988,7 +2011,8 @@ function renderIntent(){
   const e=G.enemy;if(!e||e.hp<=0){el.innerHTML='';return;}
   if(!e.plan)e.plan=planEnemyTurn(e);
   // こいし: her intent is hidden (無意識) - the player can only see that something is coming.
-  if(e.deck_type==='koishi'){el.innerHTML='<span style="font-size:.66rem;color:var(--t3)">次の行動:</span>'+e.plan.map(()=>'<span class="ichip hid">❓ ???</span>').join('');return;}
+  // feature (デイリー: 先読みの目/reveal_koishi) - sees through こいし's usually-hidden intent.
+  if(e.deck_type==='koishi'&&!hasDailyMod('reveal_koishi')){el.innerHTML='<span style="font-size:.66rem;color:var(--t3)">次の行動:</span>'+e.plan.map(()=>'<span class="ichip hid">❓ ???</span>').join('');return;}
   el.innerHTML='<span style="font-size:.66rem;color:var(--t3)">次の行動:</span>'+e.plan.map(s=>{const it=stepIntent(e,s);return`<span class="ichip ${it.cls}">${it.icon} ${it.text}</span>`;}).join('');
 }
 function enemyTurn(){
@@ -2115,6 +2139,13 @@ function startNewPlayerTurn(){
   if(pw.spgen)G.p.sp=Math.min(G.p.maxSp,G.p.sp+pw.spgen);
   if(pw.opgen)G.p.op=Math.min(G.p.maxOp,G.p.op+pw.opgen);
   if(pw.barrier)addShield(Math.max(1,Math.floor(getMaxHp()*pw.barrier/100)));
+  // feature (デイリー: 崩れゆく守り/shield_decay) - barriers wither 20% every player turn, removing
+  // any that decay to 0.
+  if(hasDailyMod('shield_decay')&&G.p.shields&&G.p.shields.length){
+    G.p.shields.forEach(sh=>{sh.hp=Math.floor(sh.hp*0.8);});
+    const before=G.p.shields.length;G.p.shields=G.p.shields.filter(sh=>sh.hp>0);
+    if(G.p.shields.length<before||G.p.shields.some(sh=>sh.hp>0))addLog('🍂 バリアが風化した…','sy');
+  }
   if(G.enemy)G.enemy.dmgTakenThisTurn=0;// feature: 結界(warded) build's per-turn damage cap resets each player turn
   G.battle.fastChainCount=0;// FIX: reset the FAST-chain circuit-breaker each new turn
   G.battle.cardsPlayedThisTurn=0;// feature: CONDFREE ALT-card mechanic tracking
@@ -2222,7 +2253,7 @@ function initBDeck(){
   bd.deck=G.p.skills.map(s=>{const c=clone(s);c.uid=s.id+'_'+Date.now()%9999+Math.floor(Math.random()*999);return c;});
   shuffle(bd.deck);bd.hand=[];bd.discard=[];bd.excluded=[];bd.playerActed=false;bd.idleLastTurn=false;
   // FIX: per-turn counters/flags used to survive into the next floor (e.g. 3 cards already 'played' vs a 4-card cap)
-  bd.cardsPlayedThisTurn=0;bd.fastChainCount=0;bd.copyNextArmed=0;bd.powers={};
+  bd.cardsPlayedThisTurn=0;bd.fastChainCount=0;bd.copyNextArmed=0;bd.powers={};bd.usedCardNames=new Set();
   // Relic: battle start draw
   const bsd=getRelicVal('BATTLE_START_DRAW');
   // FIX: the shrine event's "next battle: hand+1" used to push a fake, nonexistent relic ID
@@ -2390,7 +2421,7 @@ function checkEnd(){
     st.totalDeaths=(st.totalDeaths||0)+1;
     saveStats(st);checkAchievements();
     pushRunHistory({win:false,diff:G.diff,floor:G.floor,turn:G.turn+1,build:buildKey(p),at:Date.now()});clearRunSave();
-    if(G.isDaily)lsSet('dailyChallenge',{date:getTodayStr(),completed:true,floor:G.floor,win:false});
+    if(G.isDaily){const prev=getDailyStatus();lsSet('dailyChallenge',{date:getTodayStr(),completed:true,floor:G.floor,win:false,retries:(prev.date===getTodayStr()&&prev.retries)||0});}
     document.getElementById('res-t').textContent='DEFEATED';document.getElementById('res-t').className='res-t res-lose';
     document.getElementById('res-cp').textContent='0';document.getElementById('res-core-box').style.display='none';document.getElementById('res-relic-box').style.display='none';
     document.getElementById('res-fl').textContent=G.floor;document.getElementById('res-tn').textContent=G.turn+1;// FIX: G.turn only increments once the ENEMY has acted, so a battle won on the player's very first turn displayed as "ターン0" - now shown 1-indexed to match what the player actually experienced
@@ -2447,7 +2478,7 @@ function retireToTitle(){
   // records a "win" run-history entry only when voluntarily stopping after a victory - a loss
   // is already recorded at the moment it happens in checkEnd().
   if(G.p&&G.lastWin){pushRunHistory({win:true,diff:G.diff,floor:G.floor,turn:G.turn+1,build:buildKey(G.p),at:Date.now()});clearRunSave();}
-  if(G.isDaily)lsSet('dailyChallenge',{date:getTodayStr(),completed:true,floor:G.floor,win:true});
+  if(G.isDaily){const prev=getDailyStatus();lsSet('dailyChallenge',{date:getTodayStr(),completed:true,floor:G.floor,win:true,retries:(prev.date===getTodayStr()&&prev.retries)||0});}
   gotoTitle();
 }
 function gotoTitle(){document.getElementById('relic-btn').style.display='none';document.getElementById('pass-view-btn').style.display='none';showScr('title');updateTitleInfo();}
@@ -2470,7 +2501,7 @@ function showBattleReward(){
     if(picked.length>0)choices.push(picked[0]);
   }
   document.getElementById('rew-ttl').textContent=`⚔ F${G.floor} 戦闘報酬！`;
-  document.getElementById('rew-sub').textContent=`3枚から1枚デッキに追加（Floor${G.floor}）`;
+  document.getElementById('rew-sub').textContent=hasDailyMod('double_reward')&&!G._doubleRewardUsed?`3枚から1枚デッキに追加（Floor${G.floor}）✨2回選べます`:`3枚から1枚デッキに追加（Floor${G.floor}）`;
   document.getElementById('rew-cards').innerHTML=choices.map((sk,i)=>`
     <div class="rew-card${sk._edrop?' edrop':''}${sk.rarity==='mystic'?' mys-card':''}" onclick="pickReward(${i})">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -2488,8 +2519,17 @@ function showBattleReward(){
     </div>`).join('');
   window._rewCh=choices;showScr('reward');
 }
-function pickReward(i){const sk=clone(window._rewCh[i]);sk.uid=sk.id+'_'+Date.now()%9999;G.p.skills.push(sk);addLog(`✦ ${sk.name}をデッキに追加！`,'sy');nextFloor();}
-function skipReward(){nextFloor();}
+function pickReward(i){
+  const sk=clone(window._rewCh[i]);sk.uid=sk.id+'_'+Date.now()%9999;G.p.skills.push(sk);addLog(`✦ ${sk.name}をデッキに追加！`,'sy');
+  // feature (デイリー: 二重の恵み/double_reward) - lets you pick a SECOND card for free, once per
+  // reward screen, instead of going straight to the next floor.
+  if(hasDailyMod('double_reward')&&!G._doubleRewardUsed){
+    G._doubleRewardUsed=true;addLog('✨ 二重の恵み！もう1枚選べる','sc');showBattleReward();return;
+  }
+  G._doubleRewardUsed=false;
+  nextFloor();
+}
+function skipReward(){G._doubleRewardUsed=false;nextFloor();}
 
 let _nxtTimer=null,_nxtType=null;
 // FIX: the "RICH EVENTS" system (EV_ALL/showEvent/doEvent) was fully implemented but never
@@ -4241,17 +4281,33 @@ function admReuseSeed(){
   document.getElementById('adm-seed').value=G.seed;
   customAlert(`次回も同じシード「${G.seed}」を使います`);
 }
+function getDailyRetryCost(retries){return 80+retries*80;}
 function openDailyInfo(){
   const mods=getDailyMods();const done=isDailyDoneToday();const st=getDailyStatus();
+  const retries=(st.date===getTodayStr()&&st.retries)||0;
+  const cost=getDailyRetryCost(retries);const pts=getMetaPoints();
   document.getElementById('daily-body').innerHTML=`
-    <div style="font-size:.76rem;color:var(--t2);margin-bottom:8px">本日限定のシード値で挑戦する特別なランです。難易度はNormal固定、1日1回のみ。ハンデが3つ付きます。</div>
+    <div style="font-size:.76rem;color:var(--t2);margin-bottom:8px">本日限定のシード値で挑戦する特別なランです。難易度はNormal固定、1日1回のみ（ポイントを使えば同じ条件で再挑戦も可能）。ハンデが3つ付きます。</div>
     <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
-      ${mods.map(m=>`<div class="vcard" style="padding:8px"><b style="color:var(--danger)">${m.name}</b><div style="font-size:.72rem;color:var(--t2);margin-top:2px">${m.desc}</div></div>`).join('')}
+      ${mods.map(m=>`<div class="vcard" style="padding:8px"><b style="color:${m.type==='buff'?'var(--a2)':'var(--danger)'}">${m.type==='buff'?'🍀':'⚠'} ${m.name}</b><div style="font-size:.72rem;color:var(--t2);margin-top:2px">${m.desc}</div></div>`).join('')}
     </div>
-    ${done?`<div style="font-size:.78rem;color:var(--a3);text-align:center;margin-bottom:8px">本日は挑戦済みです（${st.win?'✔勝利':'✘敗北'} F${st.floor}）。日付が変わると再挑戦できます。</div><button class="btn" style="width:100%;color:var(--t3)" onclick="closePop('pop-daily')">閉じる</button>`
+    ${done?`<div style="font-size:.78rem;color:var(--a3);text-align:center;margin-bottom:8px">本日は挑戦済みです（${st.win?'✔勝利':'✘敗北'} F${st.floor}）。日付が変わると自然に再挑戦できます。</div>
+      <button class="btn" style="width:100%;border-color:var(--mys);color:var(--mys);margin-bottom:6px" onclick="retryDailyWithPoints()">🔁 ポイントを使って同じ条件で再挑戦（${cost}pt・所持${pts}pt）</button>
+      <button class="btn" style="width:100%;color:var(--t3)" onclick="closePop('pop-daily')">閉じる</button>`
     :`<button class="btn" style="width:100%;border-color:var(--mys);color:var(--mys)" onclick="startGameDaily()">挑戦する</button>`}
   `;
   document.getElementById('pop-daily').classList.add('show');
+}
+async function retryDailyWithPoints(){
+  const st=getDailyStatus();const retries=(st.date===getTodayStr()&&st.retries)||0;
+  const cost=getDailyRetryCost(retries);const pts=getMetaPoints();
+  if(pts<cost){customAlert(`ポイントが足りません（必要:${cost} 所持:${pts}）`);return;}
+  if(!await customConfirm(`ポイント${cost}を消費して、本日と同じシード・同じハンデで再挑戦しますか？`))return;
+  lsSet('metaPoints',pts-cost);
+  // NOTE: date stays the same, so getDailySeed()/getDailyMods() (both derived from date+salt)
+  // naturally reproduce the exact same run - only the completed flag + retry counter change.
+  lsSet('dailyChallenge',{date:getTodayStr(),completed:false,retries:retries+1});
+  openDailyInfo();
 }
 function startGameDaily(){
   if(isDailyDoneToday()){customAlert('本日のデイリーチャレンジは挑戦済みです');return;}
