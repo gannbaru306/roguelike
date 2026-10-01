@@ -1138,7 +1138,18 @@ function getBossFor(fl,consume){
 }
 function nextBossFloor(fl){let f=fl;while(f%5!==0||f<=0)f++;return f;}// current floor counts if it is itself a boss floor
 function nextBossInfo(fl){const f=nextBossFloor(fl);const b=getBossFor(f,false);return{floor:f,name:b.name,spell:b.spell};}
-const LATE_GROWTH={easy:{hp:1.22,atk:1.09},normal:{hp:1.27,atk:1.12},hard:{hp:1.31,atk:1.14},lunatic:{hp:1.34,atk:1.16}};
+// BALANCE FIX (rewritten): originally a PER-DIFFICULTY table stacked multiplicatively on top of
+// fm (which already uses an accelerating power curve on hard/lunatic) and on top of the shield%
+// and 重装 (+80%) boss-build roll - the combination exploded into literally-unbeatable HP/barrier
+// walls by F20 on Lunatic (reported: 68,054 HP + a 26,947 barrier against ATK 55). Trying to tune
+// each difficulty's rate separately kept breaking the easy<normal<hard<lunatic ordering at some
+// floor range (whichever difficulty had the kicker would eventually cross over one that didn't).
+// Correct fix: ONE shared, gentle, late-starting, capped kicker applied identically to every
+// difficulty. Since every difficulty gets the exact same factor, relative ordering between them
+// is always preserved (it's still set entirely by each difficulty's own fm/hpM/bossBonus below) -
+// this only fixes the "plateaus completely at very high floors" problem the sqrt/power curves
+// have on their own, without being able to reintroduce the Lunatic-breaking explosion.
+const LATE_KICK={hp:1.045,atk:1.02};
 function spawnEnemy(fl,diff,isBoss,isElite){
   const cfg=DIFF[diff];
   const idx=Math.min(fl-1,regularEnemyCount()-1);const base=isBoss?getBossFor(fl,true):ENEMY_DB[idx];
@@ -1150,8 +1161,8 @@ function spawnEnemy(fl,diff,isBoss,isElite){
   // BALANCE (2026-09): enemies fell far behind player damage in the mid/late game (a 1,000,000 hit
   // on Easy was routine, F80 was a walkover). From F9 on, HP/ATK now also grow exponentially per
   // floor. These four rows are THE tuning knobs: raise a number to make that difficulty harder.
-  const lg=LATE_GROWTH[diff]||LATE_GROWTH.normal;const lateN=Math.max(0,fl-8);
-  const lateHp=Math.pow(lg.hp,lateN),lateAtk=Math.pow(lg.atk,lateN);
+  const lateN=Math.max(0,fl-15);
+  const lateHp=Math.min(40,Math.pow(LATE_KICK.hp,lateN)),lateAtk=Math.min(12,Math.pow(LATE_KICK.atk,lateN));
   // FIX(balance): Lunatic's own hpM/atkM (2.2/1.4) are already steep, so stacking the
   // standard boss bonus (×2 HP, ×1.3 ATK) on top made Lunatic bosses excessive on both axes
   // at once. Lunatic gets a milder boss bonus than other difficulties.
